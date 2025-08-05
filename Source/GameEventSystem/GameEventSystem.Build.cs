@@ -1,12 +1,13 @@
-// Copyright LetsGo. All Rights Reserved.
+#region
 
 using UnrealBuildTool;
 
+#endregion
 public class GameEventSystem : ModuleRules
 {
 	public GameEventSystem(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		OptimizeCode = CodeOptimization.Never;
 
 		PublicDependencyModuleNames.AddRange(

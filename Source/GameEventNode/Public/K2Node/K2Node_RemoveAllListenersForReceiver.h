@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -19,7 +17,7 @@ public:
 	virtual FText GetKeywords() const override;
 	virtual FText GetMenuCategory() const override;
 	virtual void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 	//~ End UK2Node Interface
 
 private:

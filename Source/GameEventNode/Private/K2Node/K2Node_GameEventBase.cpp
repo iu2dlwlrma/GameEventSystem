@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #include "K2Node/K2Node_GameEventBase.h"
 
 #include "BlueprintActionDatabaseRegistrar.h"

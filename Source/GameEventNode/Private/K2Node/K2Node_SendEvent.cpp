@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "K2Node/K2Node_SendEvent.h"
 #include "KismetCompiler.h"
 #include "K2Node_CallFunction.h"
 #include "GameEventTypes.h"
-#include "GameEventNodeLog.h"
 #include "GameEventNodeUtils.h"
 #include "GameEventTypeManager.h"
 #include "K2Node_EnumLiteral.h"
@@ -24,8 +21,6 @@ const FName FK2Node_SendEventPinName::ParamDataName(TEXT("ParamData"));
 void UK2Node_SendEvent::AllocateDefaultPins()
 {
 	Super::AllocateDefaultPins();
-
-
 
 	//Input Pin & Output Pin
 	CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Execute);
@@ -76,9 +71,7 @@ void UK2Node_SendEvent::Serialize(FArchive& Ar)
 		const UEdGraphPin* Pin = Pins[Index];
 		if (Pin && !Pin->GetOwningNodeUnchecked())
 		{
-
 			Pins.RemoveAt(Index);
-			continue;
 		}
 	}
 	Super::Serialize(Ar);
@@ -89,19 +82,16 @@ void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 	// Call base class method to handle event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
 
-
 	// SendEvent specific logic: handle parameter type refresh when event name changes
 	if (Pin && (Pin->PinName == FGameEventBasePinNames::EventTagPinName ||
 	            Pin->PinName == FGameEventBasePinNames::EventStringPinName))
 	{
-
 		RefreshPinTypes();
 	}
 }
 
 void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-
 	//Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
 
@@ -115,7 +105,6 @@ void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>&
 			{
 				if (CheckParamDataPinTypeMatch(OldPin))
 				{
-	
 					NewPin = CreateParamDataPin(OldPin->PinType.PinCategory);
 					NewPin->PinType = OldPin->PinType;
 				}
@@ -176,7 +165,7 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 	if (ParamDataPin)
 	{
 		const bool bHasDefaultValue = !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject || !ParamDataPin->DefaultTextValue.IsEmpty();
-		bHasValue = (ParamDataPin->LinkedTo.Num() > 0) || bHasDefaultValue;
+		bHasValue = ParamDataPin->LinkedTo.Num() > 0 || bHasDefaultValue;
 	}
 
 	if (bIsEventString)
@@ -284,7 +273,6 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 
 void UK2Node_SendEvent::RefreshPinTypes()
 {
-
 	const FString EventName = GetCurrentEventName();
 	FEventTypeInfo TypeInfo;
 	FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
@@ -297,7 +285,6 @@ void UK2Node_SendEvent::RefreshPinTypes()
 			ParamDataPin->BreakAllPinLinks();
 			RemovePin(ParamDataPin);
 		}
-		
 	}
 	else
 	{
@@ -305,11 +292,9 @@ void UK2Node_SendEvent::RefreshPinTypes()
 		{
 			// If pin doesn't exist, create it
 			ParamDataPin = CreateParamDataPin(UEdGraphSchema_K2::PC_Wildcard);
-
 		}
 		if (!CheckParamDataPinTypeMatch(ParamDataPin))
 		{
-
 			ParamDataPin->PinType.PinCategory = TypeInfo.PinCategory;
 			ParamDataPin->PinType.PinSubCategory = TypeInfo.PinSubCategory;
 			ParamDataPin->PinType.PinSubCategoryObject = TypeInfo.PinSubCategoryObject;

@@ -98,7 +98,7 @@ private:
 	void SendFunctionEvent(const FListenerContext* Listener, const TArray<FPropertyContext>& PropertyContexts);
 
 	void ProcessFunctionParameters(const TArray<FProperty*>& Params, const TArray<FPropertyContext>& PropertyContexts, uint8* ParamsBuffer, const FString& FunctionName);
-	void CopyPropertyByType(FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer);
+	void CopyPropertyByType(const FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer);
 	void HandleCompatiblePropertyTypes(FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer);
 
 	// Copy functions for specific attribute types
@@ -106,7 +106,7 @@ private:
 	void CopySetProperty(const FSetProperty* SetProp, const void* SrcPtr, void* DestPtr);
 	void CopyArrayProperty(const FArrayProperty* ArrayProp, const void* SrcPtr, void* DestPtr);
 	void CopyStructProperty(FProperty* DestProperty, const FStructProperty* StructProp, const void* SrcPtr, uint8* ParamsBuffer);
-	void CopyObjectProperty(FProperty* DestProperty, FObjectProperty* ObjProp, const void* SrcPtr, uint8* ParamsBuffer);
+	void CopyObjectProperty(FProperty* DestProperty, const FObjectProperty* ObjProp, const void* SrcPtr, uint8* ParamsBuffer);
 	int32 RemoveListenersForReceiverInternal(const UObject* Receiver, const TSet<FEventId>* EventsToProcess = nullptr);
 	void RemoveListenerFromEvent(const FEventId& EventId, const FListenerContext& Listener);
 
@@ -131,7 +131,6 @@ private:
 	static void LogTriggerExecution(const FListenerContext& Listener, const FString& EventKey);
 #pragma endregion  "Log"
 
-private:
 	static TSharedPtr<FGameEventManager> PrivateDefaultManager;
 
 	FCriticalSection CriticalSection;
@@ -180,7 +179,7 @@ FString FGameEventManager::AddLambdaListener(const FEventId& EventId, UObject* R
 template<typename... Args>
 bool FGameEventManager::SendEvent(const FEventId& EventId, UObject* WorldContext, const bool bPinned, Args&&... Params)
 {
-	if (!WorldContext)
+	if (!WorldContext || !EventId.IsValid())
 	{
 		return false;
 	}

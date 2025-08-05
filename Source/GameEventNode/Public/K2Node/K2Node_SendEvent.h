@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -20,7 +18,7 @@ public:
 	virtual void Serialize(FArchive& Ar) override;
 	virtual void PinDefaultValueChanged(UEdGraphPin* Pin) override;
 	virtual void ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins) override;
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 
 protected:
 	void RefreshPinTypes();

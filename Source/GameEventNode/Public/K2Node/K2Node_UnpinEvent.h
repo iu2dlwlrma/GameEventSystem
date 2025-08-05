@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,7 +16,7 @@ public:
 	virtual FText GetTooltipText() const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 	virtual FText GetKeywords() const override;
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 
 private:
 	UEdGraphPin* GetSelfPin() const;

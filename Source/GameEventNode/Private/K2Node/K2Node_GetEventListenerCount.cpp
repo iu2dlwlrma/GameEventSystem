@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #include "K2Node/K2Node_GetEventListenerCount.h"
 #include "ToolMenu.h"
 #include "EdGraphSchema_K2.h"

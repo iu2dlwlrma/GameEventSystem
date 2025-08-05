@@ -599,33 +599,61 @@ private:
 	static constexpr const TCHAR* GetBasicTypePropertyName()
 	{
 		if constexpr (std::is_same_v<T, bool>)
+		{
 			return TEXT("BoolValue");
+		}
 		else if constexpr (std::is_same_v<T, int8>)
+		{
 			return TEXT("Int8Value");
+		}
 		else if constexpr (std::is_same_v<T, uint8>)
+		{
 			return TEXT("UInt8Value");
+		}
 		else if constexpr (std::is_same_v<T, int16>)
+		{
 			return TEXT("Int16Value");
+		}
 		else if constexpr (std::is_same_v<T, uint16>)
+		{
 			return TEXT("UInt16Value");
+		}
 		else if constexpr (std::is_same_v<T, int32>)
+		{
 			return TEXT("IntValue");
+		}
 		else if constexpr (std::is_same_v<T, uint32>)
+		{
 			return TEXT("UInt32Value");
+		}
 		else if constexpr (std::is_same_v<T, int64>)
+		{
 			return TEXT("Int64Value");
+		}
 		else if constexpr (std::is_same_v<T, uint64>)
+		{
 			return TEXT("UInt64Value");
+		}
 		else if constexpr (std::is_same_v<T, float>)
+		{
 			return TEXT("FloatValue");
+		}
 		else if constexpr (std::is_same_v<T, double>)
+		{
 			return TEXT("DoubleValue");
+		}
 		else if constexpr (std::is_same_v<T, FString>)
+		{
 			return TEXT("StringValue");
+		}
 		else if constexpr (std::is_same_v<T, FName>)
+		{
 			return TEXT("NameValue");
+		}
 		else if constexpr (std::is_same_v<T, FText>)
+		{
 			return TEXT("TextValue");
+		}
 		else
 			checkf(false, TEXT("UnknownValue"));
 		return TEXT("UnknownValue");
@@ -636,19 +664,33 @@ public:
 	static constexpr const TCHAR* GetPropertyNameForType()
 	{
 		if constexpr (std::is_enum_v<T>)
+		{
 			return TEXT("EnumValue");
+		}
 		else if constexpr (TIsStructSupported<T>::value && std::is_class_v<T> && !std::is_pointer_v<T>)
+		{
 			return TEXT("StructValue");
+		}
 		else if constexpr (std::is_pointer_v<T> && std::is_base_of_v<UObject, std::remove_pointer_t<T>>)
+		{
 			return TEXT("ObjectValue");
+		}
 		else if constexpr (TIsTArray<T>::Value)
+		{
 			return TEXT("ArrayValue");
+		}
 		else if constexpr (TIsTSet<T>::Value)
+		{
 			return TEXT("SetValue");
+		}
 		else if constexpr (TIsTMap<T>::Value)
+		{
 			return TEXT("MapValue");
+		}
 		else
+		{
 			return GetBasicTypePropertyName<T>();
+		}
 	}
 };
 

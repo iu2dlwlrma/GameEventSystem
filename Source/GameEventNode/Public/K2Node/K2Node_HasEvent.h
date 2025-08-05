@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,11 +13,16 @@ class GAMEEVENTNODE_API UK2Node_HasEvent : public UK2Node_GameEventBase
 
 public:
 	virtual void AllocateDefaultPins() override;
-	virtual bool IsNodePure() const override{ return true; }
+
+	virtual bool IsNodePure() const override
+	{
+		return true;
+	}
+
 	virtual FText GetTooltipText() const override;
 	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 	virtual FText GetKeywords() const override;
-	virtual void ExpandNode(class FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
+	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
 
 private:
 	UEdGraphPin* GetSelfPin() const;

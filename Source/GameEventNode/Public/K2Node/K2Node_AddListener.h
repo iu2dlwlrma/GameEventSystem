@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -33,7 +31,7 @@ public:
 	virtual void PinConnectionListChanged(UEdGraphPin* Pin) override;
 	virtual void PinDefaultValueChanged(UEdGraphPin* Pin) override;
 	virtual void PinTypeChanged(UEdGraphPin* Pin) override;
-	virtual void GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const override;
+	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 
 protected:
 	virtual void UpdatePinVisibility() override;

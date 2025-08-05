@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "K2Node/K2Node_RemoveListener.h"
 #include "KismetCompiler.h"
 #include "EdGraph/EdGraphPin.h"
@@ -47,7 +45,6 @@ FText UK2Node_RemoveListener::GetTooltipText() const
 FText UK2Node_RemoveListener::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
 	return NSLOCTEXT("K2Node", "RemoveListener_Title", "Remove Listener");
-
 }
 
 FText UK2Node_RemoveListener::GetKeywords() const
@@ -81,7 +78,7 @@ void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext,
 	const UEdGraphPin* EventIdTypePin = GetEventIdTypePin();
 	const FString EventIdTypeValue = EventIdTypePin->GetDefaultAsString();
 	const int32 EventIdTypeIndex = EventIdTypeEnum->GetIndexByNameString(EventIdTypeValue);
-	const bool bIsEventString = (EventIdTypeIndex != INDEX_NONE) && (EventIdTypeEnum->GetValueByIndex(EventIdTypeIndex) == static_cast<int64>(EEventIdType::StringBased));
+	const bool bIsEventString = EventIdTypeIndex != INDEX_NONE && EventIdTypeEnum->GetValueByIndex(EventIdTypeIndex) == static_cast<int64>(EEventIdType::StringBased);
 
 	FName CallFuncName;
 	UK2Node_CallFunction* CallFuncNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
@@ -104,7 +101,6 @@ void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext,
 		UEdGraphPin* WorldContextObjectParam = CallFuncNode->FindPinChecked(WorldContextObjectParamName);
 		UEdGraphPin* EventNameParam = CallFuncNode->FindPinChecked(EventNameParamName);
 
-		
 		if (bIsEventString)
 		{
 			CompilerContext.MovePinLinksToIntermediate(*EventStringPin, *EventNameParam);
@@ -116,7 +112,6 @@ void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext,
 
 		CompilerContext.MovePinLinksToIntermediate(*SelfPin, *WorldContextObjectParam);
 
-		
 		CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CallFuncNode->GetExecPin());
 		CompilerContext.MovePinLinksToIntermediate(*ThenPin, *CallFuncNode->GetThenPin());
 	}

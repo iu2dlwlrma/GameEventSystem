@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "GameEventNodeUtils.h"
 #include "GameEventManager.h"
 
@@ -43,7 +41,7 @@ void UGameEventNodeUtils::ClearPinValue(UEdGraphPin* Pin)
 	}
 }
 
-FString UGameEventNodeUtils::GetEventName(UEdGraphPin* Pin)
+FString UGameEventNodeUtils::GetEventName(const UEdGraphPin* Pin)
 {
 	if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_String)
 	{

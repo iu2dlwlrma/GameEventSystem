@@ -1,5 +1,3 @@
-// Copyright LetsGo. All Rights Reserved.
-
 #include "K2Node/K2Node_UnpinEvent.h"
 #include "GameEventNodeUtils.h"
 #include "KismetCompiler.h"

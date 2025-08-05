@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -16,7 +14,7 @@ public:
 	static bool IsDelegateMode(const UEdGraphPin* Pin);
 	static bool IsStringEventId(const UEdGraphPin* Pin);
 	static void ClearPinValue(UEdGraphPin* Pin);
-	static FString GetEventName(UEdGraphPin* Pin);
+	static FString GetEventName(const UEdGraphPin* Pin);
 	static FString GetCurrentEventName(const UEdGraphPin* EventIdTypePin, const UEdGraphPin* EventTagPin, const UEdGraphPin* EventStringPin);
 
 #pragma region "BlueprintInternalUseOnly"

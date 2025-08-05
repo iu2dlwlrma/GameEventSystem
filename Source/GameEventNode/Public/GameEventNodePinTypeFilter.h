@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,7 +5,7 @@
 
 class FGameEventNodePinTypeFilter final : public IPinTypeSelectorFilter
 {
-	virtual bool ShouldShowPinTypeTreeItem(FPinTypeTreeItem InItem) const override
+	virtual bool ShouldShowPinTypeTreeItem(const FPinTypeTreeItem InItem) const override
 	{
 		const FEdGraphPinType PinType = InItem->GetPinType(false);
 

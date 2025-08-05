@@ -137,13 +137,13 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 		return false;
 	}
 
-			// Exact match
+	// Exact match
 	if (ExpectedParam->GetClass() == ProvidedParam->GetClass())
 	{
 		return true;
 	}
 
-			// Struct type
+	// Struct type
 	if (const FStructProperty* ExpectedStruct = CastField<FStructProperty>(ExpectedParam))
 	{
 		if (const FStructProperty* ProvidedStruct = CastField<FStructProperty>(ProvidedParam))
@@ -151,7 +151,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ExpectedStruct->Struct == ProvidedStruct->Struct;
 		}
 	}
-			// Object type
+	// Object type
 	else if (const FObjectProperty* ExpectedObj = CastField<FObjectProperty>(ExpectedParam))
 	{
 		if (const FObjectProperty* ProvidedObj = CastField<FObjectProperty>(ProvidedParam))
@@ -159,7 +159,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ProvidedObj->PropertyClass->IsChildOf(ExpectedObj->PropertyClass);
 		}
 	}
-			// Enum type
+	// Enum type
 	else if (const FEnumProperty* ExpectedEnum = CastField<FEnumProperty>(ExpectedParam))
 	{
 		if (const FEnumProperty* ProvidedEnum = CastField<FEnumProperty>(ProvidedParam))
@@ -167,7 +167,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ExpectedEnum->GetEnum() == ProvidedEnum->GetEnum();
 		}
 	}
-			// Byte property (enum)
+	// Byte property (enum)
 	else if (const FByteProperty* ExpectedByte = CastField<FByteProperty>(ExpectedParam))
 	{
 		if (const FByteProperty* ProvidedByte = CastField<FByteProperty>(ProvidedParam))
@@ -175,7 +175,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ExpectedByte->Enum == ProvidedByte->Enum;
 		}
 	}
-			// Array type
+	// Array type
 	else if (const FArrayProperty* ExpectedArray = CastField<FArrayProperty>(ExpectedParam))
 	{
 		if (const FArrayProperty* ProvidedArray = CastField<FArrayProperty>(ProvidedParam))
@@ -183,7 +183,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ExpectedArray->Inner->GetClass() == ProvidedArray->Inner->GetClass();
 		}
 	}
-			// Set type
+	// Set type
 	else if (const FSetProperty* ExpectedSet = CastField<FSetProperty>(ExpectedParam))
 	{
 		if (const FSetProperty* ProvidedSet = CastField<FSetProperty>(ProvidedParam))
@@ -191,7 +191,7 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 			return ExpectedSet->ElementProp->GetClass() == ProvidedSet->ElementProp->GetClass();
 		}
 	}
-			// Map type
+	// Map type
 	else if (const FMapProperty* ExpectedMap = CastField<FMapProperty>(ExpectedParam))
 	{
 		if (const FMapProperty* ProvidedMap = CastField<FMapProperty>(ProvidedParam))
@@ -268,6 +268,12 @@ void FGameEventManager::RemoveListenerFromEvent(const FEventId& EventId, const F
 #pragma region "Add"
 void FGameEventManager::AddListener(const FEventId& EventId, const FListenerContext& Listener)
 {
+	if (!EventId.IsValid())
+	{
+		FLogger::Get().LogError(TEXT("Event[%s] (AddListener) - Cannot add listener - EventId is invalid"), *EventId.GetName());
+		return;
+	}
+
 	if (!Listener.Receiver.IsValid())
 	{
 		FLogger::Get().LogError(TEXT("Event[%s] (AddListener) - Cannot add listener - Receiver object is invalid"), *EventId.GetName());
@@ -547,7 +553,7 @@ void FGameEventManager::RemoveLambdaListener(const FEventId& EventId, const FStr
 		return;
 	}
 
-			// Copy listener information and remove from mapping table
+	// Copy listener information and remove from mapping table
 	FListenerContext ListenerToRemove = *LambdaListener;
 	LambdaListenerMap.Remove(LambdaListenerId);
 
@@ -671,7 +677,7 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 {
 	const FString EventKey = EventContext.EventId.GetName();
 
-			// Use multi-parameter context
+	// Use multi-parameter context
 	const TArray<FPropertyContext>& PropertyContexts = EventContext.PropertyContexts;
 
 	if (Listener->Function)
@@ -688,8 +694,8 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 
 		if (PropertyContexts.Num() > 0)
 		{
-					// For multi-parameter Lambda, we pass pointer to entire PropertyContexts array
-		// CreatePropertyWrapper will recognize this and extract all parameters
+			// For multi-parameter Lambda, we pass pointer to entire PropertyContexts array
+			// CreatePropertyWrapper will recognize this and extract all parameters
 			ParamProperty.Property = nullptr;
 			ParamProperty.PropertyPtr = const_cast<void*>(static_cast<const void*>(&PropertyContexts));
 		}
@@ -779,11 +785,11 @@ void FGameEventManager::ProcessFunctionParameters(const TArray<FProperty*>& Para
 	}
 }
 
-void FGameEventManager::CopyPropertyByType(FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer)
+void FGameEventManager::CopyPropertyByType(const FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer)
 {
 	void* DestPtr = ParamsBuffer + DestProperty->GetOffset_ForUFunction();
 
-				// Choose appropriate copy method based on property type
+	// Choose appropriate copy method based on property type
 	if (const FMapProperty* MapProp = CastField<FMapProperty>(PropertyContext.Property))
 	{
 		CopyMapProperty(MapProp, PropertyContext.PropertyPtr, DestPtr);
@@ -798,7 +804,7 @@ void FGameEventManager::CopyPropertyByType(FProperty* DestProperty, const FPrope
 	}
 	else
 	{
-					// For other property types, use standard copy
+		// For other property types, use standard copy
 		PropertyContext.Property->CopyCompleteValue(DestPtr, PropertyContext.PropertyPtr);
 	}
 }
@@ -915,7 +921,7 @@ void FGameEventManager::CopyStructProperty(FProperty* DestProperty, const FStruc
 	}
 }
 
-void FGameEventManager::CopyObjectProperty(FProperty* DestProperty, FObjectProperty* ObjProp, const void* SrcPtr, uint8* ParamsBuffer)
+void FGameEventManager::CopyObjectProperty(FProperty* DestProperty, const FObjectProperty* ObjProp, const void* SrcPtr, uint8* ParamsBuffer)
 {
 	if (const FObjectProperty* DestObjProp = CastField<FObjectProperty>(DestProperty))
 	{
@@ -1186,7 +1192,7 @@ FString FGameEventManager::ListenerLogString(const FListenerContext& Listener)
 FString FGameEventManager::EventLogString(const FEventContext& Event)
 {
 	const FString PinnedState = Event.bPinned ? TEXT("Pinned") : TEXT("Unpinned");
-	return FString::Printf(TEXT("[%s]: %s"), *Event.EventId.Key, *PinnedState);
+	return FString::Printf(TEXT("%s: %s"), *Event.EventId.Key, *PinnedState);
 }
 
 void FGameEventManager::LogTriggerExecution(const FListenerContext& Listener, const FString& EventKey)

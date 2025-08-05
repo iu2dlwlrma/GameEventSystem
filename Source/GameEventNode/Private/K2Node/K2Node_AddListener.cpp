@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "K2Node/K2Node_AddListener.h"
 #include "KismetCompiler.h"
 #include "K2Node_CallFunction.h"
@@ -285,7 +283,7 @@ void UK2Node_AddListener::PinTypeChanged(UEdGraphPin* Pin)
 	}
 }
 
-void UK2Node_AddListener::GetNodeContextMenuActions(class UToolMenu* Menu, class UGraphNodeContextMenuContext* Context) const
+void UK2Node_AddListener::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const
 {
 	Super::GetNodeContextMenuActions(Menu, Context);
 
@@ -335,22 +333,34 @@ void UK2Node_AddListener::UpdatePinVisibility()
 	{
 		UGameEventNodeUtils::ClearPinValue(FunctionNamePin);
 		if (FunctionNamePin)
+		{
 			FunctionNamePin->bHidden = true;
+		}
 		if (DelegatePin)
+		{
 			DelegatePin->bHidden = false;
+		}
 		if (DataTypePin)
+		{
 			DataTypePin->bHidden = false;
+		}
 	}
 	else
 	{
 		UGameEventNodeUtils::ClearPinValue(DataTypePin);
 		UGameEventNodeUtils::ClearPinValue(DelegatePin);
 		if (FunctionNamePin)
+		{
 			FunctionNamePin->bHidden = false;
+		}
 		if (DelegatePin)
+		{
 			DelegatePin->bHidden = true;
+		}
 		if (DataTypePin)
+		{
 			DataTypePin->bHidden = true;
+		}
 	}
 }
 

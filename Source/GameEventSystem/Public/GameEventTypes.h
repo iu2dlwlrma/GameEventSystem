@@ -96,8 +96,7 @@ struct GAMEEVENTSYSTEM_API FEventTypeInfo
 	UPROPERTY()
 	EPinContainerType ContainerType;
 
-	FEventTypeInfo() : bIsNoParams(true),
-	                   ContainerType(EPinContainerType::None)
+	FEventTypeInfo() : ContainerType(EPinContainerType::None)
 	{
 	}
 
@@ -147,22 +146,22 @@ struct GAMEEVENTSYSTEM_API FEventTypeInfo
 
 	FORCEINLINE bool IsContainer() const
 	{
-		return (ContainerType != EPinContainerType::None);
+		return ContainerType != EPinContainerType::None;
 	}
 
 	FORCEINLINE bool IsArray() const
 	{
-		return (ContainerType == EPinContainerType::Array);
+		return ContainerType == EPinContainerType::Array;
 	}
 
 	FORCEINLINE bool IsSet() const
 	{
-		return (ContainerType == EPinContainerType::Set);
+		return ContainerType == EPinContainerType::Set;
 	}
 
 	FORCEINLINE bool IsMap() const
 	{
-		return (ContainerType == EPinContainerType::Map);
+		return ContainerType == EPinContainerType::Map;
 	}
 };
 
