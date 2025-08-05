@@ -1,0 +1,46 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "游戏事件系统",
+  "Description": "一个强大的游戏事件系统，支持结构体和常用类型的事件处理，可在蓝图和C++间通信",
+  "Category": "Gameplay",
+  "CreatedBy": "oriecho",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "GameEventSystem",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "GameEventNode",
+      "Type": "UncookedOnly",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "GameEventSystemTest",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "GameplayTagsEditor",
+      "Enabled": true
+    }
+  ],
+  "LocalizationTargets": [
+    {
+      "Name": "GameEventSystem",
+      "LoadingPolicy": "Editor"
+    }
+  ]
+}
