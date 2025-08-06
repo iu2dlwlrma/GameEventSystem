@@ -2,18 +2,16 @@
 
 一个高性能、类型安全的UE5事件系统插件，支持蓝图和C++，提供灵活的事件监听和分发机制。适用于游戏开发中的模块间通信、UI更新、游戏逻辑解耦等场景。
 
-![UE版本](https://img.shields.io/badge/UE-5.0+-blue) ![平台](https://img.shields.io/badge/平台-Windows%20%7C%20Mac%20%7C%20Linux-green) ![线程安全](https://img.shields.io/badge/线程安全-✓-green)
+![UE版本](https://img.shields.io/badge/UE-5.0+-blue) ![线程安全](https://img.shields.io/badge/线程安全-✓-green)
 
 ## 功能特性
 
 - 🚀 **高性能**: 优化的事件分发机制，支持大规模事件处理
-- 🔒 **类型安全**: 编译时类型检查，避免运行时错误
 - 🧵 **线程安全**: 支持多线程环境下的安全操作
-- 📘 **蓝图友好**: 完整的蓝图节点支持，所见即所得
-- 🎯 **Lambda支持**: 支持C++ Lambda表达式作为事件监听器
-- 🏷️ **双重标识**: 支持字符串和GameplayTag两种事件标识符
+- 📘 **蓝图友好**: 完整的蓝图节点支持
 - 📌 **事件固定**: 支持事件状态持久化，后注册的监听器可立即收到固定事件
-- 🔧 **参数类型推导**: 自动推导事件参数类型，支持任意数量参数
+- 🏷️ **无类型限制**: 支持任意数据类型
+- 🔧 **参数类型推导**: 自动推导事件参数类型，支持任意数量参数（仅C++）
 
 ## 安装指南
 
@@ -169,7 +167,7 @@ void AGameMode::SetupEventListeners()
     
     // 带参数的Lambda监听器
     FString ListenerId2 = EventManager->AddLambdaListener(
-        FEventId(TEXT("Enemy.Spawned")), 
+        FEventId(TEXT("Player.Death")), 
         this,
         [this](FVector SpawnLocation, int32 EnemyType) {
             UE_LOG(LogTemp, Log, TEXT("Enemy type %d spawned at %s"), 
@@ -189,10 +187,8 @@ void AGameMode::CleanupEventListeners()
     auto EventManager = FGameEventManager::Get();
     
     // 移除Lambda监听器
-    for (const FString& ListenerId : LambdaListenerIds)
-    {
-        EventManager->RemoveLambdaListener(FEventId(TEXT("Player.Death")), ListenerId);
-    }
+    fEventManager->RemoveLambdaListener(FEventId(TEXT("Player.Death")), ListenerId1);
+    fEventManager->RemoveLambdaListener(FEventId(TEXT("Player.Death")), ListenerId2);
 }
 ```
 
@@ -310,11 +306,7 @@ void AUI_MainHUD::BeginPlay()
 
 蓝图节点支持以下参数类型：
 
-- 基础类型：int32, float, bool, FString, FName
-- UE类型：FVector, FRotator, FTransform, FColor
-- 对象引用：UObject派生类
-- 结构体：自定义USTRUCT
-- 容器类型：TArray, TSet, TMap
+- 支持所有基础类型，结构体，对象，以及容器类型
 
 ## 最佳实践
 
@@ -461,76 +453,6 @@ void AUIController::BeginPlay()
 }
 ```
 
-### 3. 成就系统
-
-```cpp
-void AAchievementManager::SetupAchievementListeners()
-{
-    auto EventManager = FGameEventManager::Get();
-    
-    // 击杀成就
-    EventManager->AddLambdaListener(
-        FEventId(TEXT("Enemy.Killed")), 
-        this,
-        [this](FString EnemyType) {
-            IncrementKillCount(EnemyType);
-            CheckKillAchievements();
-        }
-    );
-    
-    // 收集成就
-    EventManager->AddLambdaListener(
-        FEventId(TEXT("Item.Collected")), 
-        this,
-        [this](FString ItemType, int32 Quantity) {
-            UpdateCollectionProgress(ItemType, Quantity);
-            CheckCollectionAchievements();
-        }
-    );
-}
-```
-
-### 4. 音效和特效系统
-
-```cpp
-void AAudioManager::SetupAudioEvents()
-{
-    auto EventManager = FGameEventManager::Get();
-    
-    // 武器音效
-    EventManager->AddLambdaListener(
-        FEventId(TEXT("Weapon.Fired")), 
-        this,
-        [this](FVector Location, FString WeaponType) {
-            PlaySoundAtLocation(GetFireSound(WeaponType), Location);
-        }
-    );
-    
-    // 环境音效
-    EventManager->AddLambdaListener(
-        FEventId(TEXT("Player.Footstep")), 
-        this,
-        [this](FVector Location, FString SurfaceType) {
-            PlayFootstepSound(Location, SurfaceType);
-        }
-    );
-}
-
-void AEffectManager::SetupEffectEvents()
-{
-    auto EventManager = FGameEventManager::Get();
-    
-    // 爆炸特效
-    EventManager->AddLambdaListener(
-        FEventId(TEXT("Explosion.Triggered")), 
-        this,
-        [this](FVector Location, float Radius, FString ExplosionType) {
-            SpawnExplosionEffect(Location, Radius, ExplosionType);
-        }
-    );
-}
-```
-
 ## 故障排除
 
 ### 常见问题
@@ -540,25 +462,19 @@ void AEffectManager::SetupEffectEvents()
     - 确认接收者对象仍然有效
     - 验证函数签名是否匹配
 
-2. **内存泄漏**
-    - 确保在对象销毁时调用 `RemoveAllListenersForReceiver`
-    - 检查Lambda监听器是否正确移除
-
-3. **编译错误**
+2. **编译错误**
     - 确认已添加模块依赖
     - 检查头文件包含是否正确
 
-4. **蓝图节点不显示**
+3. **蓝图节点不显示**
     - 确认GameEventNode模块已启用
     - 检查插件是否正确安装
 
 ## 技术规格
 
 - **最低UE版本**: 5.0+
-- **支持平台**: Windows, Mac, Linux
 - **线程安全**: 是
 - **蓝图支持**: 完整支持
-- **性能**: 优化的哈希表和内存池
 - **内存占用**: 轻量级设计，最小内存开销
 
 ## 许可证
