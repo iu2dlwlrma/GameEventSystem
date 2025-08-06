@@ -477,10 +477,6 @@ void AUIController::BeginPlay()
 - **Blueprint Support**: Full
 - **Memory Usage**: Lightweight design, minimal memory footprint
 
-## License
-
-Copyright LetsGo. All Rights Reserved.
-
 ## Technical Support
 
 If you encounter issues during use:
