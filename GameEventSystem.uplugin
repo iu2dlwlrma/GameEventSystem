@@ -2,8 +2,8 @@
   "FileVersion": 3,
   "Version": 1,
   "VersionName": "1.0",
-  "FriendlyName": "游戏事件系统",
-  "Description": "一个强大的游戏事件系统，支持结构体和常用类型的事件处理，可在蓝图和C++间通信",
+  "FriendlyName": "Game Event System",
+  "Description": "A powerful game event system supporting event handling for structs and common types, enabling communication between Blueprint and C++."
   "Category": "Gameplay",
   "CreatedBy": "oriecho",
   "CreatedByURL": "",
