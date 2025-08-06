@@ -294,6 +294,8 @@ The plugin provides the following Blueprint nodes:
 5. Specify **Receiver** (usually Self)
 6. For **Delegate**, right-click the Delegate Pin to add parameters (Currently only supports one parameter in Blueprint!)
 
+![](./Resources/addevent.gif)
+
 #### 3. Blueprint Event Sending
 
 1. Add **Send Event** node
@@ -301,6 +303,8 @@ The plugin provides the following Blueprint nodes:
 3. Set **Pinned** property (whether the event is pinned)
 4. Connect **Param Data** input if parameters are needed
 5. Connect **Self** pin as world context
+
+![](./Resources/sendevent.gif)
 
 #### 4. Blueprint Parameter Types
 
