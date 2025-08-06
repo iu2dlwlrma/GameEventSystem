@@ -1,94 +1,94 @@
 # GameEventSystem
 
-一个高性能、类型安全的UE5事件系统插件，支持蓝图和C++，提供灵活的事件监听和分发机制。适用于游戏开发中的模块间通信、UI更新、游戏逻辑解耦等场景。
+A high-performance, type-safe UE5 event system plugin supporting both Blueprint and C++. It provides a flexible event listening and dispatch mechanism, suitable for inter-module communication, UI updates, and decoupling game logic in game development.
 
-![UE版本](https://img.shields.io/badge/UE-5.0+-blue) ![线程安全](https://img.shields.io/badge/线程安全-✓-green)
+![UE Version](https://img.shields.io/badge/UE-5.0+-blue) ![Thread Safe](https://img.shields.io/badge/Thread%20Safe-✓-green)
 
-## 功能特性
+## Features
 
-- 🚀 **高性能**: 优化的事件分发机制，支持大规模事件处理
-- 🧵 **线程安全**: 支持多线程环境下的安全操作
-- 📘 **蓝图友好**: 完整的蓝图节点支持
-- 📌 **事件固定**: 支持事件状态持久化，后注册的监听器可立即收到固定事件
-- 🏷️ **无类型限制**: 支持任意数据类型
-- 🔧 **参数类型推导**: 自动推导事件参数类型，支持任意数量参数（仅C++）
+- 🚀 **High Performance**: Optimized event dispatching, supports large-scale event processing
+- 🧵 **Thread Safe**: Safe operations in multi-threaded environments
+- 📘 **Blueprint Friendly**: Full Blueprint node support
+- 📌 **Event Pinning**: Supports event state persistence, allowing late listeners to immediately receive pinned events
+- 🏷️ **No Type Limitations**: Supports any data type
+- 🔧 **Parameter Type Deduction**: Automatically deduces event parameter types, supports any number of parameters (C++ only)
 
-## 安装指南
+## Installation Guide
 
-### 1. 插件安装
+### 1. Plugin Installation
 
-1. 将 `GameEventSystem` 插件文件夹放置到项目的 `Plugins` 目录下
-2. 重新生成项目文件（右键.uproject文件 -> Generate Visual Studio project files）
-3. 编译项目
+1. Place the `GameEventSystem` plugin folder in your project's `Plugins` directory
+2. Regenerate project files (right-click .uproject -> Generate Visual Studio project files)
+3. Build your project
 
-### 2. 模块依赖配置
+### 2. Module Dependency Configuration
 
-在项目的 `Build.cs` 文件中添加依赖：
+Add dependencies in your project's `Build.cs` file:
 
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] 
 {
-    "GameEventSystem"  // 运行时模块
+    "GameEventSystem"  // Runtime module
 });
 
-// 如果需要在编辑器中使用蓝图节点
+// For Blueprint editor node usage
 if (Target.bBuildEditor)
 {
     PrivateDependencyModuleNames.AddRange(new string[] 
     {
-        "GameEventNode"  // 蓝图编辑器模块
+        "GameEventNode"  // Blueprint editor module
     });
 }
 ```
 
-### 3. 项目设置
+### 3. Project Settings
 
-在项目设置中启用插件：
+Enable the plugin in your project settings:
 
-- 打开 `Edit -> Plugins`
-- 搜索 "GameEventSystem"
-- 勾选启用插件
+- Open `Edit -> Plugins`
+- Search "GameEventSystem"
+- Check to enable the plugin
 
-## 核心概念
+## Core Concepts
 
-### 事件标识符 (FEventId)
+### Event Identifier (FEventId)
 
-支持两种类型的事件标识符：
+Supports two types of event identifiers:
 
 ```cpp
-// 字符串标识符（推荐）
+// String identifier (recommended)
 FEventId StringEvent(TEXT("Player.LevelUp"));
 FEventId NestedEvent(TEXT("UI.MainMenu.ButtonClicked"));
 
-// GameplayTag标识符
+// GameplayTag identifier
 FGameplayTag PlayerTag = FGameplayTag::RequestGameplayTag(FName("Player.Health.Changed"));
 FEventId TagEvent(PlayerTag);
 ```
 
-### 事件管理器 (FGameEventManager)
+### Event Manager (FGameEventManager)
 
-全局单例事件管理器，负责事件的注册、分发和管理：
+Global singleton event manager, responsible for event registration, dispatch, and management:
 
 ```cpp
-// 获取事件管理器实例
+// Get event manager instance
 TSharedPtr<FGameEventManager> EventManager = FGameEventManager::Get();
 ```
 
-## 使用方法
+## Usage
 
-### C++ 使用示例
+### C++ Usage Examples
 
-#### 1. 基础事件监听
+#### 1. Basic Event Listener
 
 ```cpp
-// 在头文件中声明事件处理函数
+// Declare event handler functions in header file
 UCLASS()
 class YOURGAME_API APlayerController : public APlayerController
 {
     GENERATED_BODY()
 
 public:
-    // 事件处理函数
+    // Event handler function
     UFUNCTION()
     void OnPlayerLevelUp(int32 NewLevel, FString PlayerName);
     
@@ -105,15 +105,15 @@ private:
 ```
 
 ```cpp
-// 在源文件中实现
+// Implementation in source file
 void APlayerController::BeginPlay()
 {
     Super::BeginPlay();
     
-    // 获取事件管理器
+    // Get event manager
     EventManager = FGameEventManager::Get();
     
-    // 添加函数监听器
+    // Add function listener
     EventManager->AddListenerFunction(
         FEventId(TEXT("Player.LevelUp")), 
         this, 
@@ -129,7 +129,7 @@ void APlayerController::BeginPlay()
 
 void APlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    // 移除所有监听器
+    // Remove all listeners
     if (EventManager.IsValid())
     {
         EventManager->RemoveAllListenersForReceiver(this);
@@ -149,14 +149,14 @@ void APlayerController::OnGamePaused()
 }
 ```
 
-#### 2. Lambda 监听器
+#### 2. Lambda Listener
 
 ```cpp
 void AGameMode::SetupEventListeners()
 {
     auto EventManager = FGameEventManager::Get();
     
-    // 简单Lambda监听器
+    // Simple lambda listener
     FString ListenerId1 = EventManager->AddLambdaListener(
         FEventId(TEXT("Player.Death")), 
         this,
@@ -165,19 +165,19 @@ void AGameMode::SetupEventListeners()
         }
     );
     
-    // 带参数的Lambda监听器
+    // Lambda listener with parameters
     FString ListenerId2 = EventManager->AddLambdaListener(
         FEventId(TEXT("Player.Death")), 
         this,
         [this](FVector SpawnLocation, int32 EnemyType) {
             UE_LOG(LogTemp, Log, TEXT("Enemy type %d spawned at %s"), 
                    EnemyType, *SpawnLocation.ToString());
-            // 可以访问this指针进行更复杂的操作
+            // Can access 'this' pointer for more complex operations
             this->OnEnemySpawned(SpawnLocation, EnemyType);
         }
     );
     
-    // 保存监听器ID以便后续移除
+    // Save listener IDs for later removal
     LambdaListenerIds.Add(ListenerId1);
     LambdaListenerIds.Add(ListenerId2);
 }
@@ -186,29 +186,29 @@ void AGameMode::CleanupEventListeners()
 {
     auto EventManager = FGameEventManager::Get();
     
-    // 移除Lambda监听器
+    // Remove lambda listeners
     fEventManager->RemoveLambdaListener(FEventId(TEXT("Player.Death")), ListenerId1);
     fEventManager->RemoveLambdaListener(FEventId(TEXT("Player.Death")), ListenerId2);
 }
 ```
 
-#### 3. 发送事件
+#### 3. Sending Events
 
 ```cpp
 void APlayerCharacter::LevelUp()
 {
-    // 更新等级
+    // Update level
     CurrentLevel++;
     
     auto EventManager = FGameEventManager::Get();
     
-    // 发送带参数的事件
+    // Send event with parameters
     EventManager->SendEvent(
         FEventId(TEXT("Player.LevelUp")), 
-        this,           // 世界上下文
-        false,          // 是否固定事件
-        CurrentLevel,   // 新等级
-        GetName()       // 玩家名称
+        this,           // World context
+        false,          // Is pinned event
+        CurrentLevel,   // New level
+        GetName()       // Player name
     );
 }
 
@@ -216,51 +216,51 @@ void AGameManager::PauseGame()
 {
     auto EventManager = FGameEventManager::Get();
     
-    // 发送简单事件（无参数）
-    EventManager->SendEvent(FEventId(TEXT("Game.Paused")), this, true);  // 固定事件
+    // Send simple event (no parameters)
+    EventManager->SendEvent(FEventId(TEXT("Game.Paused")), this, true);  // Pinned event
 }
 
 void AWeaponSystem::FireWeapon(FVector FireLocation, float Damage, int32 AmmoRemaining)
 {
     auto EventManager = FGameEventManager::Get();
     
-    // 发送复杂参数事件
+    // Send event with complex parameters
     EventManager->SendEvent(
         FEventId(TEXT("Weapon.Fired")), 
         this, 
         false,
-        FireLocation,    // FVector参数
-        Damage,          // float参数
-        AmmoRemaining    // int32参数
+        FireLocation,    // FVector parameter
+        Damage,          // float parameter
+        AmmoRemaining    // int32 parameter
     );
 }
 ```
 
-#### 4. 事件固定功能
+#### 4. Event Pinning
 
 ```cpp
 void AGameState::InitializeGameState()
 {
     auto EventManager = FGameEventManager::Get();
     
-    // 发送固定事件 - 后续注册的监听器也会立即收到此事件
+    // Send pinned event - listeners registered later will immediately receive this event
     EventManager->SendEvent(
         FEventId(TEXT("Game.StateInitialized")), 
         this, 
-        true,  // 固定事件
+        true,  // Pinned event
         FString(TEXT("GameStarted")),
         GetWorld()->GetTimeSeconds()
     );
 }
 
-// 稍后注册的监听器也会立即收到固定事件
+// Listeners registered later will also instantly receive pinned events
 void AUI_MainHUD::BeginPlay()
 {
     Super::BeginPlay();
     
     auto EventManager = FGameEventManager::Get();
     
-    // 即使游戏状态已经初始化，这个监听器也会立即收到事件
+    // Even if game state is already initialized, this listener will instantly receive the event
     EventManager->AddLambdaListener(
         FEventId(TEXT("Game.StateInitialized")), 
         this,
@@ -271,62 +271,62 @@ void AUI_MainHUD::BeginPlay()
 }
 ```
 
-### 蓝图使用示例
+### Blueprint Usage Example
 
-#### 1. 蓝图节点总览
+#### 1. Blueprint Node Overview
 
-插件提供了以下蓝图节点：
+The plugin provides the following Blueprint nodes:
 
-- **Add Listener**: 添加事件监听器
-- **Send Event**: 发送事件
-- **Remove Listener**: 移除所有事件Key的监听器
-- **Remove All Listeners For Receiver**: 移除接收者的所有监听器
-- **Has Event**: 检查事件是否存在
-- **Get Event Listener Count**: 获取事件监听器数量
-- **Unpin Event**: 取消固定事件
+- **Add Listener**: Add event listener
+- **Send Event**: Send event
+- **Remove Listener**: Remove listeners for all event keys
+- **Remove All Listeners For Receiver**: Remove all listeners for a receiver
+- **Has Event**: Check if event exists
+- **Get Event Listener Count**: Get the number of listeners for an event
+- **Unpin Event**: Unpin a pinned event
 
-#### 2. 蓝图事件监听
+#### 2. Blueprint Event Listening
 
-1. 在蓝图中添加 **Add Listener** 节点
-2. 设置 **Event ID Type** (String 或 Tag)
-3. 根据类型设置 **Event Name** 或 **Event Tag**
-4. 连接 **Event Function** 到自定义事件
-5. 指定 **Receiver** (通常是Self)
-6. 如果是 **Delegate** 右键Delegate Pin脚可以创建参数（当前蓝图内仅支持一个参数！）
+1. Add **Add Listener** node in Blueprint
+2. Set **Event ID Type** (String or Tag)
+3. Set **Event Name** or **Event Tag** based on type
+4. Connect **Event Function** to a custom event
+5. Specify **Receiver** (usually Self)
+6. For **Delegate**, right-click the Delegate Pin to add parameters (Currently only supports one parameter in Blueprint!)
 
-#### 3. 蓝图事件发送
+#### 3. Blueprint Event Sending
 
-1. 添加 **Send Event** 节点
-2. 配置事件标识符
-3. 设置 **Pinned** 属性（是否固定事件）
-4. 连接 **Param Data** 输入（如果事件需要参数）
-5. 连接 **Self** 引脚作为世界上下文
+1. Add **Send Event** node
+2. Configure event identifier
+3. Set **Pinned** property (whether the event is pinned)
+4. Connect **Param Data** input if parameters are needed
+5. Connect **Self** pin as world context
 
-#### 4. 蓝图参数类型
+#### 4. Blueprint Parameter Types
 
-蓝图节点支持以下参数类型：
+Blueprint nodes support the following parameter types:
 
-- 支持所有基础类型，结构体，对象，以及容器类型
+- All basic types, structs, objects, and container types
 
-## 最佳实践
+## Best Practices
 
-### 1. 命名规范
+### 1. Naming Convention
 
-建议使用层次化的事件命名：
+Use hierarchical event naming:
 
 ```cpp
-// ✅ 推荐：层次化命名
+// ✅ Recommended: hierarchical naming
 FEventId(TEXT("Player.Combat.Damage.Taken"))
 FEventId(TEXT("UI.MainMenu.Button.Clicked"))
 FEventId(TEXT("System.Save.Progress.Updated"))
 
-// ❌ 不推荐：扁平化命名
+// ❌ Not recommended: flat naming
 FEventId(TEXT("PlayerDamage"))
 FEventId(TEXT("ButtonClick"))
 FEventId(TEXT("SaveUpdate"))
 ```
 
-### 2. 内存管理
+### 2. Memory Management
 
 ```cpp
 class AMyActor : public AActor
@@ -334,7 +334,7 @@ class AMyActor : public AActor
 protected:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override
     {
-        // 重要：在对象销毁时移除所有监听器
+        // Important: remove all listeners when object is destroyed
         if (auto EventManager = FGameEventManager::Get())
         {
             EventManager->RemoveAllListenersForReceiver(this);
@@ -345,10 +345,10 @@ protected:
 };
 ```
 
-### 3. 线程安全注意事项
+### 3. Thread Safety Notes
 
 ```cpp
-// ✅ 推荐：在游戏线程中操作
+// ✅ Recommended: operate on game thread
 void AMyActor::SafeEventOperation()
 {
     if (IsInGameThread())
@@ -358,7 +358,7 @@ void AMyActor::SafeEventOperation()
     }
     else
     {
-        // 跨线程调用需要使用AsyncTask
+        // Cross-thread calls should use AsyncTask
         AsyncTask(ENamedThreads::GameThread, [this]()
         {
             auto EventManager = FGameEventManager::Get();
@@ -368,17 +368,17 @@ void AMyActor::SafeEventOperation()
 }
 ```
 
-### 4. 事件参数优化
+### 4. Event Parameter Optimization
 
 ```cpp
-// ✅ 推荐：传递引用避免拷贝
+// ✅ Recommended: pass by reference to avoid copies
 void SendLargeDataEvent(const FLargeDataStruct& Data)
 {
     auto EventManager = FGameEventManager::Get();
     EventManager->SendEvent(FEventId(TEXT("Data.Large")), this, false, Data);
 }
 
-// ✅ 推荐：使用智能指针传递UObject
+// ✅ Recommended: use smart pointer for passing UObject
 void SendObjectEvent(TWeakObjectPtr<UMyObject> Object)
 {
     auto EventManager = FGameEventManager::Get();
@@ -386,19 +386,19 @@ void SendObjectEvent(TWeakObjectPtr<UMyObject> Object)
 }
 ```
 
-## 常见应用场景
+## Common Use Cases
 
-### 1. 玩家状态系统
+### 1. Player State System
 
 ```cpp
-// 血量系统
+// Health system
 void AHealthComponent::TakeDamage(float Damage)
 {
     CurrentHealth -= Damage;
     
     auto EventManager = FGameEventManager::Get();
     
-    // 发送血量变化事件
+    // Send health change event
     EventManager->SendEvent(
         FEventId(TEXT("Player.Health.Changed")), 
         GetOwner(), 
@@ -406,7 +406,7 @@ void AHealthComponent::TakeDamage(float Damage)
         CurrentHealth, MaxHealth, Damage
     );
     
-    // 如果死亡，发送死亡事件
+    // If dead, send death event
     if (CurrentHealth <= 0.0f)
     {
         EventManager->SendEvent(
@@ -418,17 +418,17 @@ void AHealthComponent::TakeDamage(float Damage)
 }
 ```
 
-### 2. UI响应系统
+### 2. UI Response System
 
 ```cpp
-// UI控制器监听游戏事件
+// UI controller listens to game events
 void AUIController::BeginPlay()
 {
     Super::BeginPlay();
     
     auto EventManager = FGameEventManager::Get();
     
-    // 监听血量变化更新UI
+    // Listen to health change to update UI
     EventManager->AddLambdaListener(
         FEventId(TEXT("Player.Health.Changed")), 
         this,
@@ -438,7 +438,7 @@ void AUIController::BeginPlay()
         }
     );
     
-    // 监听金币变化
+    // Listen to currency change
     EventManager->AddLambdaListener(
         FEventId(TEXT("Player.Currency.Changed")), 
         this,
@@ -453,42 +453,42 @@ void AUIController::BeginPlay()
 }
 ```
 
-## 故障排除
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **监听器没有触发**
-    - 检查事件名称是否完全一致
-    - 确认接收者对象仍然有效
-    - 验证函数签名是否匹配
+1. **Listener not triggered**
+    - Check if event name matches exactly
+    - Ensure receiver object is still valid
+    - Verify function signatures match
 
-2. **编译错误**
-    - 确认已添加模块依赖
-    - 检查头文件包含是否正确
+2. **Compile errors**
+    - Ensure module dependencies are added
+    - Check header file includes
 
-3. **蓝图节点不显示**
-    - 确认GameEventNode模块已启用
-    - 检查插件是否正确安装
+3. **Blueprint nodes not showing**
+    - Ensure GameEventNode module is enabled
+    - Check if plugin is installed correctly
 
-## 技术规格
+## Technical Specs
 
-- **最低UE版本**: 5.0+
-- **线程安全**: 是
-- **蓝图支持**: 完整支持
-- **内存占用**: 轻量级设计，最小内存开销
+- **Minimum UE Version**: 5.0+
+- **Thread Safe**: Yes
+- **Blueprint Support**: Full
+- **Memory Usage**: Lightweight design, minimal memory footprint
 
-## 许可证
+## License
 
 Copyright LetsGo. All Rights Reserved.
 
-## 技术支持
+## Technical Support
 
-如果您在使用过程中遇到问题，请：
+If you encounter issues during use:
 
-1. 查看本文档的故障排除部分
-2. 检查代码示例和最佳实践
-3. 确认插件版本和UE版本兼容性****
+1. Check the Troubleshooting section of this document
+2. Review code samples and best practices
+3. Confirm plugin version and UE version compatibility
 
 ---
 
-**GameEventSystem** - 让您的UE5项目事件通信更简单、更高效！
+**GameEventSystem** - Make event communication in your UE5 project simpler and more efficient!
