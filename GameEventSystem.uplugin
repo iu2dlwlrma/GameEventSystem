@@ -3,7 +3,7 @@
   "Version": 1,
   "VersionName": "1.0",
   "FriendlyName": "Game Event System",
-  "Description": "A powerful game event system supporting event handling for structs and common types, enabling communication between Blueprint and C++."
+  "Description": "A powerful game event system supporting event handling for structs and common types, enabling communication between Blueprint and C++.",
   "Category": "Gameplay",
   "CreatedBy": "oriecho",
   "CreatedByURL": "",
