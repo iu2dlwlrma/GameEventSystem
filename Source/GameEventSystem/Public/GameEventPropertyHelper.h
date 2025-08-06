@@ -419,7 +419,7 @@ private:
 		{
 			FEnumProperty* EnumProperty = new FEnumProperty(Context->GetClass(), *PropertyName, RF_Public);
 			EnumProperty->SetEnum(EnumClass);
-
+			
 			if constexpr (sizeof(T) == sizeof(uint8))
 			{
 				FByteProperty* UnderlyingProp = new FByteProperty(EnumProperty, TEXT("UnderlyingType"), RF_Public);

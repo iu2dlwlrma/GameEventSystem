@@ -96,7 +96,7 @@ FText UK2Node_AddListener::GetNodeTitle(ENodeTitleType::Type TitleType) const
 
 FText UK2Node_AddListener::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "AddListener_Keywords", "{0} add listener addlistener bind subscribe register hook attach"),
+	return FText::Format(NSLOCTEXT("K2Node", "AddListener_Keywords", "{0} addevent add listener addlistener bind subscribe register hook attach"),
 	                     Super::GetKeywords());
 }
 

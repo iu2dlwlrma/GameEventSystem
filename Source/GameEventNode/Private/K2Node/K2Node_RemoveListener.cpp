@@ -49,7 +49,7 @@ FText UK2Node_RemoveListener::GetNodeTitle(ENodeTitleType::Type TitleType) const
 
 FText UK2Node_RemoveListener::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "RemoveListener_Keywords", "{0} remove listener removelistener unbind unsubscribe unregister detach"),
+	return FText::Format(NSLOCTEXT("K2Node", "RemoveListener_Keywords", "{0} removeevent remove listener removelistener unbind unsubscribe unregister detach"),
 	                     Super::GetKeywords());
 }
 
