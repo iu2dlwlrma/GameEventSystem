@@ -38,8 +38,6 @@ void UK2Node_GetEventListenerCount::AllocateDefaultPins()
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Int, FK2Node_GetEventListenerCountPinName::ReturnValuePinName);
 	ReturnValuePin->PinFriendlyName = NSLOCTEXT("K2Node", "GetEventListenerCount_ReturnValue", "Listener Count");
 	ReturnValuePin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_ReturnValue_Tooltip", "Number of listeners for this event").ToString();
-
-	UpdatePinVisibility();
 }
 
 FText UK2Node_GetEventListenerCount::GetTooltipText() const
@@ -65,16 +63,7 @@ void UK2Node_GetEventListenerCount::ExpandNode(FKismetCompilerContext& CompilerC
 	static const FName WorldContextObjectParamName(TEXT("WorldContextObject"));
 	static const FName EventNameParamName(TEXT("EventName"));
 
-	UFunction* GetListenerCountFunction;
-	const bool bIsEventString = UGameEventNodeUtils::IsStringEventId(GetEventIdTypePin());
-	if (bIsEventString)
-	{
-		GetListenerCountFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, GetEventListenerCount_StrKey));
-	}
-	else
-	{
-		GetListenerCountFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, GetEventListenerCount));
-	}
+	const UFunction* GetListenerCountFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, GetEventListenerCount));
 
 	if (!GetListenerCountFunction)
 	{
@@ -93,14 +82,7 @@ void UK2Node_GetEventListenerCount::ExpandNode(FKismetCompilerContext& CompilerC
 
 	if (UEdGraphPin* CallFuncEventNamePin = CallFuncNode->FindPin(EventNameParamName))
 	{
-		if (bIsEventString)
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventStringPin(), *CallFuncEventNamePin);
-		}
-		else
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventTagPin(), *CallFuncEventNamePin);
-		}
+		ConnectEventNameWithTagConversion(CompilerContext, SourceGraph, CallFuncEventNamePin);
 	}
 
 	UEdGraphPin* ReturnValuePin = GetReturnValuePin();

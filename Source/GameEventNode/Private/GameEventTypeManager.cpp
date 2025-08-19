@@ -1,5 +1,5 @@
 #include "GameEventTypeManager.h"
-#include "GameEventTypes.h"
+#include "GameEventNodeTypes.h"
 #include "Engine/Engine.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectIterator.h"
@@ -86,7 +86,13 @@ void FGameEventTypeManager::GetPinTypeFromProperty(FProperty* Property, FName& O
 	{
 		OutPinCategory = UEdGraphSchema_K2::PC_Byte;
 		OutPinSubCategory = NAME_None;
-		OutSubCategoryObject = ByteProperty->Enum;
+		OutSubCategoryObject = nullptr;
+	}
+	else if (const FEnumProperty* EnumProperty = CastField<FEnumProperty>(Property))
+	{
+		OutPinCategory = UEdGraphSchema_K2::PC_Byte;
+		OutPinSubCategory = NAME_None;
+		OutSubCategoryObject = EnumProperty->GetEnum();
 	}
 	else if (Property->IsA<FIntProperty>())
 	{
@@ -196,7 +202,6 @@ FEventTypeInfo FGameEventTypeManager::CreateTypeInfoFromProperty(FProperty* Prop
 	GetPinTypeFromProperty(Property, PinCategory, PinSubCategory, SubCategoryObject, PinValueType, PinContainerType);
 
 	FEventTypeInfo TypeInfo(PinCategory, PinSubCategory, SubCategoryObject, PinValueType, PinContainerType);
-	TypeInfo.PinSubCategoryObject = SubCategoryObject;
 
 	return TypeInfo;
 }
@@ -251,7 +256,8 @@ void FGameEventTypeManager::RegisterEventType(const FString& EventName, const FE
 
 bool FGameEventTypeManager::GetEventTypeInfo(const FString& EventName, FEventTypeInfo& OutTypeInfo) const
 {
-	if (const FEventTypeInfo* TypeInfo = TypeRegistry.GetEventTypeInfo(EventName))
+	const FEventTypeInfo* TypeInfo = TypeRegistry.GetEventTypeInfo(EventName);
+	if (TypeInfo && TypeInfo->IsValid())
 	{
 		OutTypeInfo = *TypeInfo;
 		return true;

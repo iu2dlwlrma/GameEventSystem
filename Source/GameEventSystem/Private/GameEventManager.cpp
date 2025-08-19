@@ -117,7 +117,7 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 			return false;
 		}
 
-		if (!IsParameterCompatible(FunctionParams[i], PropertyContexts[i].Property))
+		if (!IsParameterCompatible(FunctionParams[i], PropertyContexts[i].Property.Get()))
 		{
 			FLogger::Get().LogWarning(TEXT("Event[%s] - Parameter[%d] [%s] type mismatch"),
 			                          *FunctionName,
@@ -650,7 +650,7 @@ void FGameEventManager::SendEventInternal(const FListenerContext* Listener)
 	else if (Listener->LambdaFunction)
 	{
 		// Zero-parameter Lambda call
-		FEventProperty EmptyProperty;
+		FPropertyContext EmptyProperty;
 		EmptyProperty.Property = nullptr;
 		EmptyProperty.PropertyPtr = nullptr;
 
@@ -658,7 +658,7 @@ void FGameEventManager::SendEventInternal(const FListenerContext* Listener)
 	}
 	else if (Listener->PropertyDelegate.IsBound())
 	{
-		Listener->PropertyDelegate.Execute(FEventProperty());
+		Listener->PropertyDelegate.Execute(TArray<FPropertyContext>());
 	}
 }
 
@@ -690,7 +690,7 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 
 	if (Listener->LambdaFunction)
 	{
-		FEventProperty ParamProperty;
+		FPropertyContext ParamProperty;
 
 		if (PropertyContexts.Num() > 0)
 		{
@@ -713,16 +713,7 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 
 	if (Listener->PropertyDelegate.IsBound())
 	{
-		FEventProperty ParamProperty;
-
-		if (PropertyContexts.Num() > 0)
-		{
-			ParamProperty.Property = PropertyContexts[0].Property;
-			ParamProperty.PropertyPtr = PropertyContexts[0].PropertyPtr;
-		}
-
-		Listener->PropertyDelegate.Execute(ParamProperty);
-
+		Listener->PropertyDelegate.Execute(PropertyContexts);
 		LogTriggerExecution(*Listener, EventKey);
 	}
 }
@@ -767,7 +758,7 @@ void FGameEventManager::ProcessFunctionParameters(const TArray<FProperty*>& Para
 		FProperty* DestProperty = Params[ParamIndex];
 
 		// Check if there's a corresponding PropertyContext
-		if (ParamIndex < PropertyContexts.Num() && PropertyContexts[ParamIndex].Property)
+		if (ParamIndex < PropertyContexts.Num() && PropertyContexts[ParamIndex].Property.Get())
 		{
 			const FPropertyContext& PropertyContext = PropertyContexts[ParamIndex];
 
@@ -790,15 +781,15 @@ void FGameEventManager::CopyPropertyByType(const FProperty* DestProperty, const 
 	void* DestPtr = ParamsBuffer + DestProperty->GetOffset_ForUFunction();
 
 	// Choose appropriate copy method based on property type
-	if (const FMapProperty* MapProp = CastField<FMapProperty>(PropertyContext.Property))
+	if (const FMapProperty* MapProp = CastField<FMapProperty>(PropertyContext.Property.Get()))
 	{
 		CopyMapProperty(MapProp, PropertyContext.PropertyPtr, DestPtr);
 	}
-	else if (const FSetProperty* SetProp = CastField<FSetProperty>(PropertyContext.Property))
+	else if (const FSetProperty* SetProp = CastField<FSetProperty>(PropertyContext.Property.Get()))
 	{
 		CopySetProperty(SetProp, PropertyContext.PropertyPtr, DestPtr);
 	}
-	else if (const FArrayProperty* ArrayProp = CastField<FArrayProperty>(PropertyContext.Property))
+	else if (const FArrayProperty* ArrayProp = CastField<FArrayProperty>(PropertyContext.Property.Get()))
 	{
 		CopyArrayProperty(ArrayProp, PropertyContext.PropertyPtr, DestPtr);
 	}
@@ -900,11 +891,11 @@ void FGameEventManager::CopyArrayProperty(const FArrayProperty* ArrayProp, const
 
 void FGameEventManager::HandleCompatiblePropertyTypes(FProperty* DestProperty, const FPropertyContext& PropertyContext, uint8* ParamsBuffer)
 {
-	if (const FStructProperty* StructProp = CastField<FStructProperty>(PropertyContext.Property))
+	if (const FStructProperty* StructProp = CastField<FStructProperty>(PropertyContext.Property.Get()))
 	{
 		CopyStructProperty(DestProperty, StructProp, PropertyContext.PropertyPtr, ParamsBuffer);
 	}
-	else if (FObjectProperty* ObjProp = CastField<FObjectProperty>(PropertyContext.Property))
+	else if (FObjectProperty* ObjProp = CastField<FObjectProperty>(PropertyContext.Property.Get()))
 	{
 		CopyObjectProperty(DestProperty, ObjProp, PropertyContext.PropertyPtr, ParamsBuffer);
 	}

@@ -2,7 +2,6 @@
 #include "GameEventNodeUtils.h"
 #include "KismetCompiler.h"
 #include "EdGraph/EdGraphPin.h"
-
 #include "K2Node_CallFunction.h"
 
 #define LOCTEXT_NAMESPACE "UK2Node_UnpinEvent"
@@ -33,8 +32,6 @@ void UK2Node_UnpinEvent::AllocateDefaultPins()
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
-
-	UpdatePinVisibility();
 }
 
 FText UK2Node_UnpinEvent::GetTooltipText() const
@@ -60,23 +57,7 @@ void UK2Node_UnpinEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEd
 	static const FName WorldContextObjectParamName(TEXT("WorldContextObject"));
 	static const FName EventNameParamName(TEXT("EventName"));
 
-	const UEdGraphPin* EventIdTypePin = GetEventIdTypePin();
-
-	// Determine which event identifier type to use
-	const bool bIsEventString = UGameEventNodeUtils::IsStringEventId(EventIdTypePin);
-
-	// Create function call node
-	UFunction* UnpinEventFunction;
-	if (bIsEventString)
-	{
-		// Use string version
-		UnpinEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, UnpinEvent_StrKey));
-	}
-	else
-	{
-		// Use GameplayTag version
-		UnpinEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, UnpinEvent));
-	}
+	const UFunction* UnpinEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, UnpinEvent));
 
 	if (!UnpinEventFunction)
 	{
@@ -101,17 +82,10 @@ void UK2Node_UnpinEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEd
 		CompilerContext.MovePinLinksToIntermediate(*GetSelfPin(), *CallFuncSelfPin);
 	}
 
-	// Connect event name pin
+	// Connect event name pin using base class method
 	if (UEdGraphPin* CallFuncEventNamePin = CallFuncNode->FindPin(EventNameParamName))
 	{
-		if (bIsEventString)
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventStringPin(), *CallFuncEventNamePin);
-		}
-		else
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventTagPin(), *CallFuncEventNamePin);
-		}
+		ConnectEventNameWithTagConversion(CompilerContext, SourceGraph, CallFuncEventNamePin);
 	}
 
 	// Break down original node

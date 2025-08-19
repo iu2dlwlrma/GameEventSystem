@@ -13,9 +13,14 @@ void SGraphNodeAddListener::Construct(const FArguments& InArgs, UK2Node_AddListe
 
 TSharedPtr<SGraphPin> SGraphNodeAddListener::CreatePinWidget(UEdGraphPin* Pin) const
 {
-	if (Pin && Pin->PinName == FName(TEXT("DataType")))
+	if (Pin)
 	{
-		return SNew(SGraphPinDataType, Pin);
+		const FString PinNameStr = Pin->PinName.ToString();
+		const FString DataTypePrefixStr = TEXT("DataType");
+		if (PinNameStr == DataTypePrefixStr || PinNameStr.StartsWith(DataTypePrefixStr))
+		{
+			return SNew(SGraphPinDataType, Pin);
+		}
 	}
 
 	return SGraphNode::CreatePinWidget(Pin);

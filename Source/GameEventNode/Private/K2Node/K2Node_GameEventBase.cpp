@@ -5,7 +5,9 @@
 #include "GameEventNodeUtils.h"
 #include "EdGraph/EdGraphPin.h"
 #include "GameplayTagContainer.h"
-#include "GameEventTypes.h"
+#include "GameEventNodeTypes.h"
+#include "K2Node_CallFunction.h"
+#include "KismetCompiler.h"
 
 #define LOCTEXT_NAMESPACE "UK2Node_GameEventBase"
 
@@ -19,9 +21,11 @@ UK2Node_GameEventBase::UK2Node_GameEventBase()
 
 void UK2Node_GameEventBase::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	Super::PinDefaultValueChanged(Pin);
 
-	if (Pin && IsEventIdentifierPin(Pin))
+	if (Pin && CheckUpdatePinCondition(Pin))
 	{
 		UpdatePinVisibility();
 	}
@@ -39,7 +43,10 @@ FText UK2Node_GameEventBase::GetKeywords() const
 
 void UK2Node_GameEventBase::PostReconstructNode()
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	Super::PostReconstructNode();
+
 	UpdatePinVisibility();
 }
 
@@ -58,6 +65,8 @@ void UK2Node_GameEventBase::GetMenuActions(FBlueprintActionDatabaseRegistrar& Ac
 
 void UK2Node_GameEventBase::UpdatePinVisibility()
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	UEdGraphPin* EventTagPin = GetEventTagPin();
 	UEdGraphPin* EventStringPin = GetEventStringPin();
 
@@ -79,7 +88,7 @@ void UK2Node_GameEventBase::UpdatePinVisibility()
 		EventStringPin->bHidden = true;
 	}
 
-	GetGraph()->NotifyGraphChanged();
+	GetGraph()->NotifyNodeChanged(this);
 }
 
 FString UK2Node_GameEventBase::GetCurrentEventName() const
@@ -89,6 +98,8 @@ FString UK2Node_GameEventBase::GetCurrentEventName() const
 
 void UK2Node_GameEventBase::CreateEventIdentifierPins()
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
 	UEnum* EventIdTypeEnum = StaticEnum<EEventIdType>();
@@ -121,16 +132,40 @@ UEdGraphPin* UK2Node_GameEventBase::GetEventStringPin() const
 	return Pin;
 }
 
-bool UK2Node_GameEventBase::IsEventIdentifierPin(const UEdGraphPin* Pin) const
+bool UK2Node_GameEventBase::CheckUpdatePinCondition(const UEdGraphPin* Pin) const
 {
 	if (!Pin)
 	{
 		return false;
 	}
+	return Pin->PinName == FGameEventBasePinNames::EventIdTypePinName;
+}
 
-	return Pin->PinName == FGameEventBasePinNames::EventIdTypePinName ||
-	       Pin->PinName == FGameEventBasePinNames::EventTagPinName ||
-	       Pin->PinName == FGameEventBasePinNames::EventStringPinName;
+void UK2Node_GameEventBase::ConnectEventNameWithTagConversion(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, UEdGraphPin* EventNameParam)
+{
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
+	if (!EventNameParam)
+	{
+		return;
+	}
+
+	if (UGameEventNodeUtils::IsStringEventId(GetEventIdTypePin()))
+	{
+		CompilerContext.MovePinLinksToIntermediate(*GetEventStringPin(), *EventNameParam);
+	}
+	else
+	{
+		UK2Node_CallFunction* TagToEventNameNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+		TagToEventNameNode->FunctionReference.SetExternalMember(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, TagToEventName), UGameEventNodeUtils::StaticClass());
+		TagToEventNameNode->AllocateDefaultPins();
+
+		UEdGraphPin* TagInput = TagToEventNameNode->FindPinChecked(TEXT("InTag"));
+		UEdGraphPin* StringOutput = TagToEventNameNode->FindPinChecked(UEdGraphSchema_K2::PN_ReturnValue);
+
+		CompilerContext.MovePinLinksToIntermediate(*GetEventTagPin(), *TagInput);
+		StringOutput->MakeLinkTo(EventNameParam);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

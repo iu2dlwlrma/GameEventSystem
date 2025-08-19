@@ -2,7 +2,6 @@
 #include "KismetCompiler.h"
 #include "EdGraph/EdGraphPin.h"
 #include "K2Node_CallFunction.h"
-#include "GameEventTypes.h"
 #include "GameEventNodeUtils.h"
 
 #define LOCTEXT_NAMESPACE "UK2Node_RemoveListener"
@@ -33,8 +32,6 @@ void UK2Node_RemoveListener::AllocateDefaultPins()
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
-
-	UpdatePinVisibility();
 }
 
 FText UK2Node_RemoveListener::GetTooltipText() const
@@ -60,13 +57,9 @@ void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext,
 	static const FName WorldContextObjectParamName(TEXT("WorldContextObject"));
 	static const FName EventNameParamName(TEXT("EventName"));
 
-	static const UEnum* EventIdTypeEnum = StaticEnum<EEventIdType>();
-
 	UEdGraphPin* ExecPin = GetExecPin();
 	UEdGraphPin* ThenPin = GetThenPin();
 	UEdGraphPin* SelfPin = GetSelfPin();
-	UEdGraphPin* EventTagPin = GetEventTagPin();
-	UEdGraphPin* EventStringPin = GetEventStringPin();
 
 	if (!ExecPin || !ThenPin || !SelfPin)
 	{
@@ -74,41 +67,19 @@ void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext,
 		return;
 	}
 
-	// Determine which remove function to use
-	const UEdGraphPin* EventIdTypePin = GetEventIdTypePin();
-	const FString EventIdTypeValue = EventIdTypePin->GetDefaultAsString();
-	const int32 EventIdTypeIndex = EventIdTypeEnum->GetIndexByNameString(EventIdTypeValue);
-	const bool bIsEventString = EventIdTypeIndex != INDEX_NONE && EventIdTypeEnum->GetValueByIndex(EventIdTypeIndex) == static_cast<int64>(EEventIdType::StringBased);
-
-	FName CallFuncName;
 	UK2Node_CallFunction* CallFuncNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
 
-	if (bIsEventString)
-	{
-		CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, RemoveListener_StrKey);
-	}
-	else
-	{
-		CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, RemoveListener);
-	}
+	const FName CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, RemoveListener);
 
 	if (!CallFuncName.IsNone())
 	{
 		CallFuncNode->FunctionReference.SetExternalMember(CallFuncName, UGameEventNodeUtils::StaticClass());
 		CallFuncNode->AllocateDefaultPins();
 
-		// Connect WorldContextObject parameter
 		UEdGraphPin* WorldContextObjectParam = CallFuncNode->FindPinChecked(WorldContextObjectParamName);
 		UEdGraphPin* EventNameParam = CallFuncNode->FindPinChecked(EventNameParamName);
 
-		if (bIsEventString)
-		{
-			CompilerContext.MovePinLinksToIntermediate(*EventStringPin, *EventNameParam);
-		}
-		else
-		{
-			CompilerContext.MovePinLinksToIntermediate(*EventTagPin, *EventNameParam);
-		}
+		ConnectEventNameWithTagConversion(CompilerContext, SourceGraph, EventNameParam);
 
 		CompilerContext.MovePinLinksToIntermediate(*SelfPin, *WorldContextObjectParam);
 

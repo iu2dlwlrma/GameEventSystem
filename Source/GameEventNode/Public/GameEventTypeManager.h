@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameEventTypes.h"
+#include "GameEventNodeTypes.h"
 
 class GAMEEVENTNODE_API FGameEventTypeManager
 {

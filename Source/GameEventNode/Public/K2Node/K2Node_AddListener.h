@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameEventTypes.h"
 #include "K2Node/K2Node_GameEventBase.h"
 #include "Templates/SharedPointer.h"
 #include "K2Node_AddListener.generated.h"
@@ -34,30 +33,29 @@ public:
 	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 
 protected:
+	virtual bool CheckUpdatePinCondition(const UEdGraphPin* Pin) const override;
 	virtual void UpdatePinVisibility() override;
+
+	void UpdateEventSignature() const;
 	void AnalyzeFunctionAndRegisterEventType() const;
 	void UpdateCustomEventSignatureFromDataType() const;
 	void HandleDelegateExpansion(const UK2Node_CallFunction* CallFuncNode, FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph);
 	void CreateDataConversionNodes(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, const UK2Node_CustomEvent* WrapperEventNode);
-	UFunction* GetConvertFunction() const;
 
 private:
-#pragma region PinAccessors
-	void AddDataTypePin();
-	void RemoveDataTypePin();
+	void AddDataTypePinAtIndex(const int32 Index = -1);
+	void RemoveDataTypePinAtIndex(const int32 Index = -1);
+	TArray<UEdGraphPin*> GetAllDataTypePins() const;
+	UEdGraphPin* GetDataTypePinByIndex(const int32 Index) const;
+	int32 GetDataTypePinCount() const;
+
+#pragma region "GetPin"
 	UEdGraphPin* GetDataTypePin() const;
 	UEdGraphPin* GetSelfPin() const;
 	UEdGraphPin* GetFunctionNamePin() const;
 	UEdGraphPin* GetBindTypePin() const;
 	UEdGraphPin* GetDelegatePin() const;
-#pragma endregion PinAccessors
-
-	FEventTypeInfo CachedTypeInfo;
-
-	bool bTypeAnalyzed;
-
-	UPROPERTY()
-	FEventPropertyDelegate Delegate;
+#pragma endregion
 
 	friend class SGraphNodeAddListener;
 };

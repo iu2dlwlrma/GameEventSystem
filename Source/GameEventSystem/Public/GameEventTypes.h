@@ -5,48 +5,13 @@
 #include "UObject/WeakObjectPtr.h"
 #include "GameEventTypes.generated.h"
 
-#pragma region Enum
-
-UENUM(BlueprintType)
-enum class EEventIdType : uint8
-{
-	TagBased UMETA(DisplayName = "Tag"),
-	StringBased UMETA(DisplayName = "String"),
-};
-
-UENUM(BlueprintType)
-enum class EEventBindType : uint8
-{
-	FunctionName UMETA(DisplayName = "FunctionName"),
-	Delegate UMETA(DisplayName = "Delegate")
-};
-
-#pragma endregion Enum
-
-#pragma region Property
-
 USTRUCT(BlueprintType)
-struct GAMEEVENTSYSTEM_API FEventProperty
+struct GAMEEVENTSYSTEM_API FPropertyContext
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "GameEventSystem|Property")
 	TFieldPath<FProperty> Property;
-	void* PropertyPtr;
-
-	FEventProperty() : PropertyPtr(nullptr)
-	{
-	}
-
-	bool IsPropertyValid() const
-	{
-		return Property.Get() != nullptr && PropertyPtr != nullptr;
-	}
-};
-
-struct GAMEEVENTSYSTEM_API FPropertyContext
-{
-	FProperty* Property;
 	void* PropertyPtr;
 
 	FPropertyContext() : Property(nullptr),
@@ -61,7 +26,7 @@ struct GAMEEVENTSYSTEM_API FPropertyContext
 
 	bool IsValid() const
 	{
-		return Property != nullptr && PropertyPtr != nullptr;
+		return Property.Get() != nullptr && PropertyPtr != nullptr;
 	}
 
 	void Clean()
@@ -71,137 +36,7 @@ struct GAMEEVENTSYSTEM_API FPropertyContext
 	}
 };
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FEventPropertyDelegate, const FEventProperty&, Property);
-
-USTRUCT(BlueprintType)
-struct GAMEEVENTSYSTEM_API FEventTypeInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	bool bIsNoParams = true;
-
-	UPROPERTY()
-	FName PinCategory;
-
-	UPROPERTY()
-	FName PinSubCategory;
-
-	UPROPERTY()
-	TWeakObjectPtr<UObject> PinSubCategoryObject;
-
-	UPROPERTY()
-	FEdGraphTerminalType PinValueType;
-
-	UPROPERTY()
-	EPinContainerType ContainerType;
-
-	FEventTypeInfo() : ContainerType(EPinContainerType::None)
-	{
-	}
-
-	FEventTypeInfo(const FName& InPinCategory, const FName& InPinSubCategory, const TWeakObjectPtr<UObject>& InPinSubCategoryObject, const FEdGraphTerminalType& InPinValueType, const EPinContainerType InContainerType) : bIsNoParams(false),
-	                                                                                                                                                                                                                        PinCategory(InPinCategory),
-	                                                                                                                                                                                                                        PinSubCategory(InPinSubCategory),
-	                                                                                                                                                                                                                        PinSubCategoryObject(InPinSubCategoryObject),
-	                                                                                                                                                                                                                        PinValueType(InPinValueType),
-	                                                                                                                                                                                                                        ContainerType(InContainerType)
-	{
-	}
-
-	FEventTypeInfo(const FEdGraphPinType& InPinType) : bIsNoParams(false),
-	                                                   PinCategory(InPinType.PinCategory),
-	                                                   PinSubCategory(InPinType.PinSubCategory),
-	                                                   PinSubCategoryObject(InPinType.PinSubCategoryObject),
-	                                                   PinValueType(InPinType.PinValueType),
-	                                                   ContainerType(InPinType.ContainerType)
-	{
-	}
-
-	FString ToString() const
-	{
-		if (bIsNoParams)
-		{
-			return FString("NoParams");
-		}
-		FString Result = PinCategory.ToString() + TEXT(".") + PinSubCategory.ToString();
-		if (PinSubCategoryObject.Get())
-		{
-			Result += TEXT(".") + PinSubCategoryObject->GetName();
-		}
-		if (IsArray())
-		{
-			Result += TEXT(" Array");
-		}
-		if (IsSet())
-		{
-			Result += TEXT(" Set");
-		}
-		if (IsMap())
-		{
-			Result += +TEXT(".") + PinValueType.TerminalCategory.ToString() + TEXT(" Map");
-		}
-		return Result;
-	}
-
-	FORCEINLINE bool IsContainer() const
-	{
-		return ContainerType != EPinContainerType::None;
-	}
-
-	FORCEINLINE bool IsArray() const
-	{
-		return ContainerType == EPinContainerType::Array;
-	}
-
-	FORCEINLINE bool IsSet() const
-	{
-		return ContainerType == EPinContainerType::Set;
-	}
-
-	FORCEINLINE bool IsMap() const
-	{
-		return ContainerType == EPinContainerType::Map;
-	}
-};
-
-USTRUCT(BlueprintType)
-struct GAMEEVENTSYSTEM_API FEventTypeRegistry
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TMap<FString, FEventTypeInfo> EventTypes;
-
-	void RegisterEventType(const FString& EventName, const FEventTypeInfo& TypeInfo)
-	{
-		EventTypes.Add(EventName, TypeInfo);
-	}
-
-	const FEventTypeInfo* GetEventTypeInfo(const FString& EventName) const
-	{
-		return EventTypes.Find(EventName);
-	}
-
-	bool IsEventRegistered(const FString& EventName) const
-	{
-		return EventTypes.Contains(EventName);
-	}
-
-	void UnregisterEventType(const FString& EventName)
-	{
-		EventTypes.Remove(EventName);
-	}
-
-	void ClearAll()
-	{
-		EventTypes.Empty();
-	}
-};
-
-#pragma endregion Property
-
-#pragma region Event
+DECLARE_DYNAMIC_DELEGATE_OneParam(FEventPropertyDelegate, const TArray<FPropertyContext>&, Property);
 
 USTRUCT(BlueprintType)
 struct GAMEEVENTSYSTEM_API FEventId
@@ -275,15 +110,13 @@ struct GAMEEVENTSYSTEM_API FEventId
 	}
 };
 
-#pragma region Listener
-
 struct GAMEEVENTSYSTEM_API FListenerContext
 {
 	TWeakObjectPtr<> Receiver;
 	FString FunctionName;
 	UFunction* Function;
 	FEventPropertyDelegate PropertyDelegate;
-	TFunction<void(const FEventProperty&)> LambdaFunction;
+	TFunction<void(const FPropertyContext&)> LambdaFunction;
 
 	FListenerContext() : Receiver(nullptr),
 	                     Function(nullptr)
@@ -430,8 +263,6 @@ struct GAMEEVENTSYSTEM_API FListener
 	}
 };
 
-#pragma endregion Listener
-
 struct GAMEEVENTSYSTEM_API FEventContextBase
 {
 	FEventId EventId;
@@ -493,5 +324,3 @@ struct GAMEEVENTSYSTEM_API FEventContext : FEventContextBase
 		return PropertyContexts.Num() > 0;
 	}
 };
-
-#pragma endregion Event

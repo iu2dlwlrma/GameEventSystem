@@ -112,16 +112,110 @@ FString UGameEventNodeUtils::GetCurrentEventName(const UEdGraphPin* EventIdTypeP
 	return FString();
 }
 
-void UGameEventNodeUtils::AddListener_ByFuncName(UObject* WorldContextObject, const FGameplayTag EventName, const FString& FunctionName)
+FName UGameEventNodeUtils::GetMultiParameterPinName(const FName PinName, const int32 Index)
 {
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return;
-	}
-	AddListener_StrKey_ByFuncName(WorldContextObject, FEventId::TagToEventName(EventName), FunctionName);
+	return Index == 0 ? PinName : FName(*FString::Printf(TEXT("%s%d"), *PinName.ToString(), Index));
 }
 
-void UGameEventNodeUtils::AddListener_StrKey_ByFuncName(UObject* WorldContextObject, const FString EventName, const FString& FunctionName)
+UFunction* UGameEventNodeUtils::GetConvertFunction(const UEdGraphPin* DataTypePin)
+{
+	if (!DataTypePin)
+	{
+		return nullptr;
+	}
+	const FName DataTypeCategory = DataTypePin->PinType.PinCategory;
+
+	UFunction* ConvertFunction = nullptr;
+
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Boolean)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToBoolean));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Byte)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToByte));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Int)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToInt));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Int64)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToInt64));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Real)
+	{
+		if (DataTypePin->PinType.PinSubCategory == UEdGraphSchema_K2::PC_Float)
+		{
+			ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToFloat));
+		}
+		if (DataTypePin->PinType.PinSubCategory == UEdGraphSchema_K2::PC_Double)
+		{
+			ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToDouble));
+		}
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Name)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToName));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_String)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToString));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Text)
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToText));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Struct)
+	{
+		if (const UScriptStruct* Struct = Cast<UScriptStruct>(DataTypePin->PinType.PinSubCategoryObject.Get()))
+		{
+			const FString DataTypeSubCategory = Struct->GetName();
+		}
+
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToStruct));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Object)
+	{
+		const FString DataTypeSubCategory = DataTypePin->PinType.PinSubCategoryObject->GetName();
+
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToObject));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_SoftObject)
+	{
+		const FString DataTypeSubCategory = DataTypePin->PinType.PinSubCategoryObject->GetName();
+
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToSoftObject));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_Class)
+	{
+		const FString DataTypeSubCategory = DataTypePin->PinType.PinSubCategoryObject->GetName();
+
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToClass));
+	}
+	if (DataTypeCategory == UEdGraphSchema_K2::PC_SoftClass)
+	{
+		const FString DataTypeSubCategory = DataTypePin->PinType.PinSubCategoryObject->GetName();
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertToSoftClass));
+	}
+
+	if (DataTypePin->PinType.IsArray())
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertArrayType));
+	}
+	if (DataTypePin->PinType.IsSet())
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertSetType));
+	}
+	if (DataTypePin->PinType.IsMap())
+	{
+		ConvertFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, ConvertMapType));
+	}
+
+	return ConvertFunction;
+}
+
+void UGameEventNodeUtils::AddListener_ByFuncName(UObject* WorldContextObject, const FString EventName, const FString& FunctionName)
 {
 	FListenerContext Listener;
 	Listener.Receiver = WorldContextObject;
@@ -133,17 +227,7 @@ void UGameEventNodeUtils::AddListener_StrKey_ByFuncName(UObject* WorldContextObj
 	}
 }
 
-void UGameEventNodeUtils::AddListener_ByDelegate(UObject* WorldContextObject, const FGameplayTag EventName, const FEventPropertyDelegate& PropertyDelegate)
-{
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return;
-	}
-
-	AddListener_StrKey_ByDelegate(WorldContextObject, FEventId::TagToEventName(EventName), PropertyDelegate);
-}
-
-void UGameEventNodeUtils::AddListener_StrKey_ByDelegate(UObject* WorldContextObject, const FString EventName, const FEventPropertyDelegate& PropertyDelegate)
+void UGameEventNodeUtils::AddListener_ByDelegate(UObject* WorldContextObject, const FString EventName, const FEventPropertyDelegate& PropertyDelegate)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -160,17 +244,7 @@ void UGameEventNodeUtils::AddListener_StrKey_ByDelegate(UObject* WorldContextObj
 	}
 }
 
-void UGameEventNodeUtils::RemoveListener(UObject* WorldContextObject, const FGameplayTag EventName)
-{
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return;
-	}
-
-	RemoveListener_StrKey(WorldContextObject, FEventId::TagToEventName(EventName));
-}
-
-void UGameEventNodeUtils::RemoveListener_StrKey(UObject* WorldContextObject, const FString EventName)
+void UGameEventNodeUtils::RemoveListener(UObject* WorldContextObject, const FString EventName)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -183,51 +257,12 @@ void UGameEventNodeUtils::RemoveListener_StrKey(UObject* WorldContextObject, con
 	}
 }
 
-void UGameEventNodeUtils::SendEvent(UObject* WorldContextObject, const FGameplayTag EventName, const bool bPinned, const int32& ParamData)
+void UGameEventNodeUtils::SendEvent(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData)
 {
 	checkNoEntry();
 }
 
 DEFINE_FUNCTION(UGameEventNodeUtils::execSendEvent)
-{
-	P_GET_OBJECT(UObject, WorldContextObject);
-	P_GET_STRUCT(FGameplayTag, EventName);
-	P_GET_UBOOL(bPinned);
-
-	Stack.Step(Stack.Object, nullptr);
-
-	FProperty* Property = nullptr;
-	void* ValuePtr = nullptr;
-	if (Stack.MostRecentProperty != nullptr)
-	{
-		Property = CastField<FProperty>(Stack.MostRecentProperty);
-		ValuePtr = Stack.MostRecentPropertyAddress;
-	}
-
-	P_FINISH;
-	P_NATIVE_BEGIN;
-		if (!IsValid(WorldContextObject) || !EventName.IsValid())
-		{
-			return;
-		}
-
-		FString Key = FEventId::TagToEventName(EventName);
-
-		FEventContext EventContext;
-		EventContext.WorldContext = WorldContextObject;
-		EventContext.EventId.Key = Key;
-		EventContext.bPinned = bPinned;
-		EventContext.AddPropertyContext(Property, ValuePtr);
-		FGameEventManager::Get()->SendEvent(EventContext);
-	P_NATIVE_END;
-}
-
-void UGameEventNodeUtils::SendEvent_StrKey(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData)
-{
-	checkNoEntry();
-}
-
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEvent_StrKey)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -253,17 +288,265 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEvent_StrKey)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEvent_NoParam(UObject* WorldContextObject, const FGameplayTag EventName, const bool bPinned)
+void UGameEventNodeUtils::SendEventTwoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1)
 {
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return;
-	}
-
-	SendEvent_NoParam_StrKey(WorldContextObject, FEventId::TagToEventName(EventName), bPinned);
+	checkNoEntry();
 }
 
-void UGameEventNodeUtils::SendEvent_NoParam_StrKey(UObject* WorldContextObject, const FString EventName, const bool bPinned)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventTwoParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 2; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventThreeParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventThreeParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 3; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventFourParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFourParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 4; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventFiveParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFiveParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 5; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventSixParam(UObject* WorldContextObject,
+                                            const FString EventName,
+                                            const bool bPinned,
+                                            const int32& ParamData,
+                                            const int32& ParamData1,
+                                            const int32& ParamData2,
+                                            const int32& ParamData3,
+                                            const int32& ParamData4,
+                                            const int32& ParamData5)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSixParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 6; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventSevenParam(UObject* WorldContextObject,
+                                              const FString EventName,
+                                              const bool bPinned,
+                                              const int32& ParamData,
+                                              const int32& ParamData1,
+                                              const int32& ParamData2,
+                                              const int32& ParamData3,
+                                              const int32& ParamData4,
+                                              const int32& ParamData5,
+                                              const int32& ParamData6)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSevenParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 7; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEventEightParam(UObject* WorldContextObject,
+                                              const FString EventName,
+                                              const bool bPinned,
+                                              const int32& ParamData,
+                                              const int32& ParamData1,
+                                              const int32& ParamData2,
+                                              const int32& ParamData3,
+                                              const int32& ParamData4,
+                                              const int32& ParamData5,
+                                              const int32& ParamData6,
+                                              const int32& ParamData7)
+{
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventEightParam)
+{
+	Stack.MostRecentProperty = nullptr;
+	FEventContext EventContext;
+
+	Stack.StepCompiledIn<FObjectProperty>(&EventContext.WorldContext);
+	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
+	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
+
+	for (int32 i = 0; i < 8; ++i)
+	{
+		Stack.Step(Stack.Object, nullptr);
+		if (Stack.MostRecentProperty != nullptr)
+		{
+			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
+		}
+		else
+		{
+			EventContext.AddPropertyContext(nullptr, nullptr);
+		}
+	}
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::SendEvent_NoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -277,17 +560,7 @@ void UGameEventNodeUtils::SendEvent_NoParam_StrKey(UObject* WorldContextObject, 
 	}
 }
 
-void UGameEventNodeUtils::UnpinEvent(UObject* WorldContextObject, const FGameplayTag EventName)
-{
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return;
-	}
-
-	UnpinEvent_StrKey(WorldContextObject, FEventId::TagToEventName(EventName));
-}
-
-void UGameEventNodeUtils::UnpinEvent_StrKey(UObject* WorldContextObject, const FString EventName)
+void UGameEventNodeUtils::UnpinEvent(UObject* WorldContextObject, const FString EventName)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -300,17 +573,7 @@ void UGameEventNodeUtils::UnpinEvent_StrKey(UObject* WorldContextObject, const F
 	}
 }
 
-bool UGameEventNodeUtils::HasEvent(UObject* WorldContextObject, const FGameplayTag EventName)
-{
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return false;
-	}
-
-	return HasEvent_StrKey(WorldContextObject, FEventId::TagToEventName(EventName));
-}
-
-bool UGameEventNodeUtils::HasEvent_StrKey(UObject* WorldContextObject, const FString EventName)
+bool UGameEventNodeUtils::HasEvent(UObject* WorldContextObject, const FString EventName)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -325,17 +588,7 @@ bool UGameEventNodeUtils::HasEvent_StrKey(UObject* WorldContextObject, const FSt
 	return false;
 }
 
-int32 UGameEventNodeUtils::GetEventListenerCount(UObject* WorldContextObject, const FGameplayTag EventName)
-{
-	if (!IsValid(WorldContextObject) || !EventName.IsValid())
-	{
-		return 0;
-	}
-
-	return GetEventListenerCount_StrKey(WorldContextObject, FEventId::TagToEventName(EventName));
-}
-
-int32 UGameEventNodeUtils::GetEventListenerCount_StrKey(UObject* WorldContextObject, const FString EventName)
+int32 UGameEventNodeUtils::GetEventListenerCount(UObject* WorldContextObject, const FString EventName)
 {
 	if (!IsValid(WorldContextObject) || EventName.IsEmpty())
 	{
@@ -364,9 +617,15 @@ void UGameEventNodeUtils::RemoveAllListenersForReceiver(UObject* Receiver)
 }
 
 #pragma region "Convert"
-bool UGameEventNodeUtils::ConvertToBoolean(const FEventProperty& InProp, bool& OutValue)
+
+FString UGameEventNodeUtils::TagToEventName(const FGameplayTag InTag)
 {
-	if (InProp.IsPropertyValid())
+	return FEventId::TagToEventName(InTag);
+}
+
+bool UGameEventNodeUtils::ConvertToBoolean(const FPropertyContext& InProp, bool& OutValue)
+{
+	if (InProp.IsValid())
 	{
 		if (const FBoolProperty* Property = CastField<FBoolProperty>(InProp.Property.Get()))
 		{
@@ -377,9 +636,9 @@ bool UGameEventNodeUtils::ConvertToBoolean(const FEventProperty& InProp, bool& O
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToInt(const FEventProperty& InProp, int32& OutValue)
+bool UGameEventNodeUtils::ConvertToInt(const FPropertyContext& InProp, int32& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FIntProperty* Property = CastField<FIntProperty>(InProp.Property.Get()))
 		{
@@ -390,9 +649,9 @@ bool UGameEventNodeUtils::ConvertToInt(const FEventProperty& InProp, int32& OutV
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToInt64(const FEventProperty& InProp, int64& OutValue)
+bool UGameEventNodeUtils::ConvertToInt64(const FPropertyContext& InProp, int64& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FInt64Property* Property = CastField<FInt64Property>(InProp.Property.Get()))
 		{
@@ -403,9 +662,9 @@ bool UGameEventNodeUtils::ConvertToInt64(const FEventProperty& InProp, int64& Ou
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToFloat(const FEventProperty& InProp, float& OutValue)
+bool UGameEventNodeUtils::ConvertToFloat(const FPropertyContext& InProp, float& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FFloatProperty* Property = CastField<FFloatProperty>(InProp.Property.Get()))
 		{
@@ -416,9 +675,9 @@ bool UGameEventNodeUtils::ConvertToFloat(const FEventProperty& InProp, float& Ou
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToDouble(const FEventProperty& InProp, double& OutValue)
+bool UGameEventNodeUtils::ConvertToDouble(const FPropertyContext& InProp, double& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FDoubleProperty* Property = CastField<FDoubleProperty>(InProp.Property.Get()))
 		{
@@ -429,9 +688,9 @@ bool UGameEventNodeUtils::ConvertToDouble(const FEventProperty& InProp, double& 
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToByte(const FEventProperty& InProp, uint8& OutValue)
+bool UGameEventNodeUtils::ConvertToByte(const FPropertyContext& InProp, uint8& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FByteProperty* Property = CastField<FByteProperty>(InProp.Property.Get()))
 		{
@@ -442,9 +701,9 @@ bool UGameEventNodeUtils::ConvertToByte(const FEventProperty& InProp, uint8& Out
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToString(const FEventProperty& InProp, FString& OutValue)
+bool UGameEventNodeUtils::ConvertToString(const FPropertyContext& InProp, FString& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FStrProperty* Property = CastField<FStrProperty>(InProp.Property.Get()))
 		{
@@ -455,9 +714,9 @@ bool UGameEventNodeUtils::ConvertToString(const FEventProperty& InProp, FString&
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToText(const FEventProperty& InProp, FText& OutValue)
+bool UGameEventNodeUtils::ConvertToText(const FPropertyContext& InProp, FText& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FTextProperty* Property = CastField<FTextProperty>(InProp.Property.Get()))
 		{
@@ -468,9 +727,9 @@ bool UGameEventNodeUtils::ConvertToText(const FEventProperty& InProp, FText& Out
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToName(const FEventProperty& InProp, FName& OutValue)
+bool UGameEventNodeUtils::ConvertToName(const FPropertyContext& InProp, FName& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FNameProperty* Property = CastField<FNameProperty>(InProp.Property.Get()))
 		{
@@ -481,7 +740,7 @@ bool UGameEventNodeUtils::ConvertToName(const FEventProperty& InProp, FName& Out
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToStruct(const FEventProperty& InProp, TFieldPath<FProperty>& OutValue)
+bool UGameEventNodeUtils::ConvertToStruct(const FPropertyContext& InProp, TFieldPath<FProperty>& OutValue)
 {
 	checkNoEntry();
 	return false;
@@ -489,7 +748,7 @@ bool UGameEventNodeUtils::ConvertToStruct(const FEventProperty& InProp, TFieldPa
 
 DEFINE_FUNCTION(UGameEventNodeUtils::execConvertToStruct)
 {
-	P_GET_STRUCT_REF(FEventProperty, InProp);
+	P_GET_STRUCT_REF(FPropertyContext, InProp);
 
 	Stack.StepCompiledIn<FProperty>(nullptr);
 	void* OutStructPtr = Stack.MostRecentPropertyAddress;
@@ -499,7 +758,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertToStruct)
 
 	*static_cast<bool*>(RESULT_PARAM) = false;
 
-	if (!OutStructProperty || !OutStructPtr || !InProp.IsPropertyValid())
+	if (!OutStructProperty || !OutStructPtr || !InProp.IsValid())
 	{
 		return;
 	}
@@ -518,9 +777,9 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertToStruct)
 	}
 }
 
-bool UGameEventNodeUtils::ConvertToObject(const FEventProperty& InProp, UObject*& OutValue)
+bool UGameEventNodeUtils::ConvertToObject(const FPropertyContext& InProp, UObject*& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FObjectProperty* Property = CastField<FObjectProperty>(InProp.Property.Get()))
 		{
@@ -531,9 +790,9 @@ bool UGameEventNodeUtils::ConvertToObject(const FEventProperty& InProp, UObject*
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToSoftObject(const FEventProperty& InProp, TSoftObjectPtr<>& OutValue)
+bool UGameEventNodeUtils::ConvertToSoftObject(const FPropertyContext& InProp, TSoftObjectPtr<>& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FSoftObjectProperty* Property = CastField<FSoftObjectProperty>(InProp.Property.Get()))
 		{
@@ -544,9 +803,9 @@ bool UGameEventNodeUtils::ConvertToSoftObject(const FEventProperty& InProp, TSof
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToClass(const FEventProperty& InProp, UClass*& OutValue)
+bool UGameEventNodeUtils::ConvertToClass(const FPropertyContext& InProp, UClass*& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FClassProperty* Property = CastField<FClassProperty>(InProp.Property.Get()))
 		{
@@ -557,9 +816,9 @@ bool UGameEventNodeUtils::ConvertToClass(const FEventProperty& InProp, UClass*& 
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertToSoftClass(const FEventProperty& InProp, TSoftClassPtr<>& OutValue)
+bool UGameEventNodeUtils::ConvertToSoftClass(const FPropertyContext& InProp, TSoftClassPtr<>& OutValue)
 {
-	if (InProp.IsPropertyValid())
+	if (InProp.IsValid())
 	{
 		if (const FSoftClassProperty* Property = CastField<FSoftClassProperty>(InProp.Property.Get()))
 		{
@@ -570,7 +829,7 @@ bool UGameEventNodeUtils::ConvertToSoftClass(const FEventProperty& InProp, TSoft
 	return false;
 }
 
-bool UGameEventNodeUtils::ConvertArrayType(const FEventProperty& InProp, TArray<uint8>& OutValue)
+bool UGameEventNodeUtils::ConvertArrayType(const FPropertyContext& InProp, TArray<uint8>& OutValue)
 {
 	checkNoEntry();
 	return false;
@@ -578,7 +837,7 @@ bool UGameEventNodeUtils::ConvertArrayType(const FEventProperty& InProp, TArray<
 
 DEFINE_FUNCTION(UGameEventNodeUtils::execConvertArrayType)
 {
-	P_GET_STRUCT_REF(FEventProperty, InProp);
+	P_GET_STRUCT_REF(FPropertyContext, InProp);
 
 	Stack.StepCompiledIn<FProperty>(nullptr);
 	void* OutArrayPtr = Stack.MostRecentPropertyAddress;
@@ -588,7 +847,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertArrayType)
 
 	*static_cast<bool*>(RESULT_PARAM) = false;
 
-	if (!InProp.IsPropertyValid() || !OutArrayProperty || !OutArrayPtr)
+	if (!InProp.IsValid() || !OutArrayProperty || !OutArrayPtr)
 	{
 		return;
 	}
@@ -625,7 +884,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertArrayType)
 	*static_cast<bool*>(RESULT_PARAM) = true;
 }
 
-bool UGameEventNodeUtils::ConvertSetType(const FEventProperty& InProp, TSet<uint8>& OutValue)
+bool UGameEventNodeUtils::ConvertSetType(const FPropertyContext& InProp, TSet<uint8>& OutValue)
 {
 	checkNoEntry();
 	return false;
@@ -633,7 +892,7 @@ bool UGameEventNodeUtils::ConvertSetType(const FEventProperty& InProp, TSet<uint
 
 DEFINE_FUNCTION(UGameEventNodeUtils::execConvertSetType)
 {
-	P_GET_STRUCT_REF(FEventProperty, InProp);
+	P_GET_STRUCT_REF(FPropertyContext, InProp);
 
 	Stack.MostRecentProperty = nullptr;
 	Stack.MostRecentPropertyAddress = nullptr;
@@ -645,7 +904,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertSetType)
 
 	*static_cast<bool*>(RESULT_PARAM) = false;
 
-	if (!InProp.IsPropertyValid() || !OutProperty)
+	if (!InProp.IsValid() || !OutProperty)
 	{
 		return;
 	}
@@ -685,7 +944,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertSetType)
 	*static_cast<bool*>(RESULT_PARAM) = true;
 }
 
-bool UGameEventNodeUtils::ConvertMapType(const FEventProperty& InProp, TMap<uint8, uint8>& OutValue)
+bool UGameEventNodeUtils::ConvertMapType(const FPropertyContext& InProp, TMap<uint8, uint8>& OutValue)
 {
 	checkNoEntry();
 	return false;
@@ -693,7 +952,7 @@ bool UGameEventNodeUtils::ConvertMapType(const FEventProperty& InProp, TMap<uint
 
 DEFINE_FUNCTION(UGameEventNodeUtils::execConvertMapType)
 {
-	P_GET_STRUCT_REF(FEventProperty, InProp);
+	P_GET_STRUCT_REF(FPropertyContext, InProp);
 
 	Stack.MostRecentProperty = nullptr;
 	Stack.MostRecentPropertyAddress = nullptr;
@@ -705,7 +964,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execConvertMapType)
 
 	*static_cast<bool*>(RESULT_PARAM) = false;
 
-	if (!InProp.IsPropertyValid() || !OutProperty)
+	if (!InProp.IsValid() || !OutProperty)
 	{
 		return;
 	}

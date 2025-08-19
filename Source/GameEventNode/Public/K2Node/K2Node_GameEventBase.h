@@ -37,5 +37,7 @@ protected:
 	virtual UEdGraphPin* GetEventTagPin() const;
 	virtual UEdGraphPin* GetEventStringPin() const;
 
-	virtual bool IsEventIdentifierPin(const UEdGraphPin* Pin) const;
+	virtual bool CheckUpdatePinCondition(const UEdGraphPin* Pin) const;
+
+	virtual void ConnectEventNameWithTagConversion(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, UEdGraphPin* EventNameParam);
 };

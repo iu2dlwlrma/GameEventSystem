@@ -1,11 +1,13 @@
 #include "K2Node/K2Node_SendEvent.h"
 #include "KismetCompiler.h"
-#include "K2Node_CallFunction.h"
-#include "GameEventTypes.h"
+#include "GameEventNodeTypes.h"
 #include "GameEventNodeUtils.h"
 #include "GameEventTypeManager.h"
-#include "K2Node_EnumLiteral.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Engine/Engine.h"
+#include "TimerManager.h"
+#include "K2Node_CallFunction.h"
+#include "K2Node_EnumLiteral.h"
 
 #define LOCTEXT_NAMESPACE "UK2Node_SendEvent"
 
@@ -20,6 +22,8 @@ const FName FK2Node_SendEventPinName::ParamDataName(TEXT("ParamData"));
 
 void UK2Node_SendEvent::AllocateDefaultPins()
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	Super::AllocateDefaultPins();
 
 	//Input Pin & Output Pin
@@ -31,14 +35,11 @@ void UK2Node_SendEvent::AllocateDefaultPins()
 	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "SendEvent_Self", "Target");
 	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "SendEvent_Self_Tooltip", "Target object for sending event").ToString();
 
-	// EventIdType pin
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
 
 	// Pinned Pin
 	CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Boolean, FK2Node_SendEventPinName::PinnedName);
-
-	UpdatePinVisibility();
 }
 
 FText UK2Node_SendEvent::GetTooltipText() const
@@ -59,26 +60,17 @@ FText UK2Node_SendEvent::GetKeywords() const
 
 void UK2Node_SendEvent::PostReconstructNode()
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	Super::PostReconstructNode();
 
 	RefreshPinTypes();
 }
 
-void UK2Node_SendEvent::Serialize(FArchive& Ar)
-{
-	for (int32 Index = Pins.Num() - 1; Index >= 0; --Index)
-	{
-		const UEdGraphPin* Pin = Pins[Index];
-		if (Pin && !Pin->GetOwningNodeUnchecked())
-		{
-			Pins.RemoveAt(Index);
-		}
-	}
-	Super::Serialize(Ar);
-}
-
 void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	// Call base class method to handle event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
 
@@ -92,23 +84,47 @@ void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	//Super::ReallocatePinsDuringReconstruction(OldPins);
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
+	// Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
 
 	// Preserve default values and type information for important pins
 	for (const UEdGraphPin* OldPin : OldPins)
 	{
+		// Check if it is a ParamData pin
+		bool bIsParamDataPin = false;
 		if (OldPin->PinName == FK2Node_SendEventPinName::ParamDataName)
+		{
+			bIsParamDataPin = true;
+		}
+		else
+		{
+			// Check if it is the numbered ParamData pin
+			const FString PinNameStr = OldPin->PinName.ToString();
+			const FString PrefixStr = FK2Node_SendEventPinName::ParamDataName.ToString();
+			if (PinNameStr.StartsWith(PrefixStr) && PinNameStr.Len() > PrefixStr.Len())
+			{
+				const FString NumberPart = PinNameStr.Mid(PrefixStr.Len());
+				if (NumberPart.IsNumeric())
+				{
+					bIsParamDataPin = true;
+				}
+			}
+		}
+
+		if (bIsParamDataPin)
 		{
 			UEdGraphPin* NewPin = FindPin(OldPin->PinName);
 			if (!NewPin)
 			{
-				if (CheckParamDataPinTypeMatch(OldPin))
-				{
-					NewPin = CreateParamDataPin(OldPin->PinType.PinCategory);
-					NewPin->PinType = OldPin->PinType;
-				}
+				NewPin = CreatePin(EGPD_Input, OldPin->PinType.PinCategory, OldPin->PinName);
 			}
+			NewPin->PinType = OldPin->PinType;
+			NewPin->DefaultObject = OldPin->DefaultObject;
+			NewPin->DefaultTextValue = OldPin->DefaultTextValue;
+			NewPin->DefaultValue = OldPin->DefaultValue;
+			NewPin->bDefaultValueIsIgnored = NewPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object || NewPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct;
 		}
 	}
 
@@ -117,6 +133,8 @@ void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>&
 
 void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	Super::ExpandNode(CompilerContext, SourceGraph);
 
 	static TMap<FName, FName> MakeLiteralFunctionTable =
@@ -134,61 +152,77 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 	static const FName WorldContextObjectParamName(TEXT("WorldContextObject"));
 	static const FName EventNameParamName(TEXT("EventName"));
 	static const FName PinnedParamName(TEXT("bPinned"));
-	static const FName ParamDataParamName(TEXT("ParamData"));
 
 	UEdGraphPin* ExecPin = GetExecPin();
 	UEdGraphPin* ThenPin = GetThenPin();
 	UEdGraphPin* SelfPin = GetSelfPin();
-	UEdGraphPin* EventTagPin = GetEventTagPin();
-	UEdGraphPin* EventStringPin = GetEventStringPin();
 	UEdGraphPin* PinnedPin = GetPinnedPin();
-	UEdGraphPin* ParamDataPin = GetParamDataPin();
 
 	if (!ExecPin || !ThenPin || !SelfPin)
 	{
 		CompilerContext.MessageLog.Error(*LOCTEXT("InvalidPins", "Invalid pins in @@").ToString(), this);
 		return;
 	}
-	if (!CheckParamDataPinTypeMatch())
+	if (!CheckParamDataPinsTypeMatch())
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("ParamData", "Type mismatch, please refresh the node! @@").ToString(), this);
+		CompilerContext.MessageLog.Error(*LOCTEXT("ParamDataMatch", "Type mismatch, please refresh the node! @@").ToString(), this);
 		return;
 	}
 
-	const bool bIsEventString = UGameEventNodeUtils::IsStringEventId(GetEventIdTypePin());
+	const TArray<UEdGraphPin*> ParamDataPins = GetAllParamDataPins();
+	const int32 ParamCount = ParamDataPins.Num();
+	for (const UEdGraphPin* ParamDataPin : ParamDataPins)
+	{
+		const bool bValid = ParamDataPin != nullptr || !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject || !ParamDataPin->DefaultTextValue.IsEmpty();
+		if (!bValid)
+		{
+			CompilerContext.MessageLog.Error(*LOCTEXT("ParamDataValid", "Invalid parameters! @@").ToString(), this);
+			return;
+		}
+	}
 
 	FName CallFuncName;
 	UK2Node_CallFunction* CallFuncNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
 
-	// Check if there's parameter data - ParamDataPin may not exist
-	bool bHasValue = false;
-	if (ParamDataPin)
+	const bool bHasParam = ParamCount > 0;
+	if (bHasParam)
 	{
-		const bool bHasDefaultValue = !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject || !ParamDataPin->DefaultTextValue.IsEmpty();
-		bHasValue = ParamDataPin->LinkedTo.Num() > 0 || bHasDefaultValue;
-	}
-
-	if (bIsEventString)
-	{
-		if (bHasValue)
+		if (ParamCount == 1)
 		{
-			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent_StrKey);
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent);
 		}
-		else
+		else if (ParamCount == 2)
 		{
-			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent_NoParam_StrKey);
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventTwoParam);
+		}
+		else if (ParamCount == 3)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventThreeParam);
+		}
+		else if (ParamCount == 4)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventFourParam);
+		}
+		else if (ParamCount == 5)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventFiveParam);
+		}
+		else if (ParamCount == 6)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventSixParam);
+		}
+		else if (ParamCount == 7)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventSevenParam);
+		}
+		else if (ParamCount == 8)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventEightParam);
 		}
 	}
 	else
 	{
-		if (bHasValue)
-		{
-			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent);
-		}
-		else
-		{
-			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent_NoParam);
-		}
+		CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent_NoParam);
 	}
 
 	if (!CallFuncName.IsNone())
@@ -196,74 +230,70 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 		CallFuncNode->FunctionReference.SetExternalMember(CallFuncName, UGameEventNodeUtils::StaticClass());
 		CallFuncNode->AllocateDefaultPins();
 
-		// Connect WorldContextObject parameter
 		UEdGraphPin* WorldContextObjectParam = CallFuncNode->FindPinChecked(WorldContextObjectParamName);
 		UEdGraphPin* EventNameParam = CallFuncNode->FindPinChecked(EventNameParamName);
 		UEdGraphPin* PinnedParam = CallFuncNode->FindPinChecked(PinnedParamName);
 
-		// Connect event name parameter
-		if (bIsEventString)
-		{
-			CompilerContext.MovePinLinksToIntermediate(*EventStringPin, *EventNameParam);
-		}
-		else
-		{
-			CompilerContext.MovePinLinksToIntermediate(*EventTagPin, *EventNameParam);
-		}
+		ConnectEventNameWithTagConversion(CompilerContext, SourceGraph, EventNameParam);
 
 		CompilerContext.MovePinLinksToIntermediate(*SelfPin, *WorldContextObjectParam);
 		CompilerContext.MovePinLinksToIntermediate(*PinnedPin, *PinnedParam);
 
-		// If there's parameter data, connect parameter data
-		if (bHasValue && ParamDataPin)
+		if (bHasParam)
 		{
-			UEdGraphPin* ParamDataParam = CallFuncNode->FindPinChecked(ParamDataParamName);
-			ParamDataParam->PinType = ParamDataPin->PinType;
-			// Handle connected pins, unconnected pins need to be linked, otherwise reflection won't get them and cause crashes
-			if (ParamDataPin->LinkedTo.Num() == 0)
+			for (int i = 0; i < ParamCount; ++i)
 			{
-				// Basic types
-				if (const FName* MakeLiteralFunctionName = MakeLiteralFunctionTable.Find(ParamDataPin->PinType.PinCategory))
+				if (UEdGraphPin* ParamDataPin = ParamDataPins[i])
 				{
-					// Enum types
-					if (ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Byte && ParamDataPin->PinType.PinSubCategoryObject.Get())
+					const FName ParamDataParamName = i == 0 ? FName(TEXT("ParamData")) : FName(*FString::Printf(TEXT("ParamData%d"), i));
+					UEdGraphPin* ParamDataParam = CallFuncNode->FindPinChecked(ParamDataParamName);
+					ParamDataParam->PinType = ParamDataPin->PinType;
+					// Handle connected pins, unconnected pins need to be linked, otherwise reflection won't get them and cause crashes
+					if (ParamDataPin->LinkedTo.Num() == 0)
 					{
-						UK2Node_EnumLiteral* EnumLiteralNode = CompilerContext.SpawnIntermediateNode<UK2Node_EnumLiteral>(this, SourceGraph);
-						EnumLiteralNode->Enum = CastChecked<UEnum>(ParamDataPin->PinType.PinSubCategoryObject.Get());
-						EnumLiteralNode->AllocateDefaultPins();
+						// Basic types
+						if (const FName* MakeLiteralFunctionName = MakeLiteralFunctionTable.Find(ParamDataPin->PinType.PinCategory))
+						{
+							// Enum types
+							if (ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Byte && ParamDataPin->PinType.PinSubCategoryObject.Get())
+							{
+								UK2Node_EnumLiteral* EnumLiteralNode = CompilerContext.SpawnIntermediateNode<UK2Node_EnumLiteral>(this, SourceGraph);
+								EnumLiteralNode->Enum = CastChecked<UEnum>(ParamDataPin->PinType.PinSubCategoryObject.Get());
+								EnumLiteralNode->AllocateDefaultPins();
 
-						UEdGraphPin* EnumBytePin = EnumLiteralNode->FindPinChecked(FName("Enum"));
-						CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *EnumBytePin);
+								UEdGraphPin* EnumBytePin = EnumLiteralNode->FindPinChecked(FName("Enum"));
+								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *EnumBytePin);
 
-						UEdGraphPin* OutputPin = EnumLiteralNode->FindPinChecked(UEdGraphSchema_K2::PN_ReturnValue);
-						ParamDataParam->MakeLinkTo(OutputPin);
+								UEdGraphPin* OutputPin = EnumLiteralNode->FindPinChecked(UEdGraphSchema_K2::PN_ReturnValue);
+								ParamDataParam->MakeLinkTo(OutputPin);
+							}
+							else
+							{
+								const UFunction* MakeLiteralFunction = UKismetSystemLibrary::StaticClass()->FindFunctionByName(*MakeLiteralFunctionName);
+								UK2Node_CallFunction* MakeLiteralNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+								MakeLiteralNode->SetFromFunction(MakeLiteralFunction);
+								MakeLiteralNode->AllocateDefaultPins();
+
+								UEdGraphPin* MakeLiteralPin = MakeLiteralNode->FindPinChecked(TEXT("Value"));
+								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *MakeLiteralPin);
+
+								UEdGraphPin* OutputPin = MakeLiteralNode->GetReturnValuePin();
+								ParamDataParam->MakeLinkTo(OutputPin);
+							}
+						}
+						else
+						{
+							CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *ParamDataParam);
+						}
 					}
 					else
 					{
-						const UFunction* MakeLiteralFunction = UKismetSystemLibrary::StaticClass()->FindFunctionByName(*MakeLiteralFunctionName);
-						UK2Node_CallFunction* MakeLiteralNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-						MakeLiteralNode->SetFromFunction(MakeLiteralFunction);
-						MakeLiteralNode->AllocateDefaultPins();
-
-						UEdGraphPin* MakeLiteralPin = MakeLiteralNode->FindPinChecked(TEXT("Value"));
-						CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *MakeLiteralPin);
-
-						UEdGraphPin* OutputPin = MakeLiteralNode->GetReturnValuePin();
-						ParamDataParam->MakeLinkTo(OutputPin);
+						CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *ParamDataParam);
 					}
 				}
-				else
-				{
-					CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *ParamDataParam);
-				}
-			}
-			else
-			{
-				CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *ParamDataParam);
 			}
 		}
 
-		// Connect execution pins
 		CompilerContext.MovePinLinksToIntermediate(*ExecPin, *CallFuncNode->GetExecPin());
 		CompilerContext.MovePinLinksToIntermediate(*ThenPin, *CallFuncNode->GetThenPin());
 	}
@@ -273,91 +303,130 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 
 void UK2Node_SendEvent::RefreshPinTypes()
 {
+	if (UE::GetIsEditorLoadingPackage() || !GIsEditor || IsTemplate() || HasAnyFlags(RF_ClassDefaultObject))
+	{
+		return;
+	}
+
+	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+
 	const FString EventName = GetCurrentEventName();
 	FEventTypeInfo TypeInfo;
-	FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
-	const bool bIsNoParams = EventName.IsEmpty();
-	UEdGraphPin* ParamDataPin = GetParamDataPin();
+	const bool bHasTypeInfo = FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
+	const bool bIsNoParams = EventName.IsEmpty() || !TypeInfo.IsValid();
+
+	const TArray<UEdGraphPin*> CurrentParamDataPins = GetAllParamDataPins();
+
 	if (bIsNoParams)
 	{
-		if (ParamDataPin)
+		// Remove all parameter pins
+		for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
 		{
-			ParamDataPin->BreakAllPinLinks();
-			RemovePin(ParamDataPin);
+			if (ParamDataPin)
+			{
+				ParamDataPin->BreakAllPinLinks();
+				RemovePin(ParamDataPin);
+			}
 		}
 	}
 	else
 	{
-		if (!ParamDataPin && !TypeInfo.bIsNoParams)
+		const int32 ExpectedParamCount = TypeInfo.GetParameterCount();
+		const int32 CurrentParamCount = CurrentParamDataPins.Num();
+
+		//Recreate pins only when there is clear type information and no match
+		if (bHasTypeInfo && (CurrentParamCount != ExpectedParamCount || !CheckParamDataPinsTypeMatch()))
 		{
-			// If pin doesn't exist, create it
-			ParamDataPin = CreateParamDataPin(UEdGraphSchema_K2::PC_Wildcard);
-		}
-		if (!CheckParamDataPinTypeMatch(ParamDataPin))
-		{
-			ParamDataPin->PinType.PinCategory = TypeInfo.PinCategory;
-			ParamDataPin->PinType.PinSubCategory = TypeInfo.PinSubCategory;
-			ParamDataPin->PinType.PinSubCategoryObject = TypeInfo.PinSubCategoryObject;
-			ParamDataPin->PinType.PinValueType = TypeInfo.PinValueType;
-			ParamDataPin->PinType.ContainerType = TypeInfo.ContainerType;
-			if (ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object ||
-			    ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Class ||
-			    ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftObject ||
-			    ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftClass ||
-			    ParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct)
+			// Save existing pin connections and default values
+			TArray<TArray<UEdGraphPin*>> OldConnections;
+			TArray<FString> OldDefaultValues;
+			TArray<UObject*> OldDefaultObjects;
+			TArray<FText> OldDefaultTextValues;
+
+			for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
 			{
-				ParamDataPin->bDefaultValueIsIgnored = true;
+				if (ParamDataPin)
+				{
+					OldConnections.Add(ParamDataPin->LinkedTo);
+					OldDefaultValues.Add(ParamDataPin->DefaultValue);
+					OldDefaultObjects.Add(ParamDataPin->DefaultObject);
+					OldDefaultTextValues.Add(ParamDataPin->DefaultTextValue);
+				}
 			}
-			else
+
+			// Remove existing parameter pins
+			for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
 			{
-				ParamDataPin->bDefaultValueIsIgnored = false;
+				if (ParamDataPin)
+				{
+					ParamDataPin->BreakAllPinLinks();
+					RemovePin(ParamDataPin);
+				}
+			}
+
+			// Create new parameter pins
+			for (int32 i = 0; i < ExpectedParamCount; ++i)
+			{
+				if (const FEventParameterInfo* ParamInfo = TypeInfo.GetParameterInfo(i))
+				{
+					UEdGraphPin* NewParamDataPin = CreateParamDataPinAtIndex(i, ParamInfo->PinCategory);
+					NewParamDataPin->PinType.PinCategory = ParamInfo->PinCategory;
+					NewParamDataPin->PinType.PinSubCategory = ParamInfo->PinSubCategory;
+					NewParamDataPin->PinType.PinSubCategoryObject = ParamInfo->PinSubCategoryObject;
+					NewParamDataPin->PinType.PinValueType = ParamInfo->PinValueType;
+					NewParamDataPin->PinType.ContainerType = ParamInfo->ContainerType;
+
+					if (NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object ||
+					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Class ||
+					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftObject ||
+					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftClass ||
+					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct)
+					{
+						NewParamDataPin->bDefaultValueIsIgnored = true;
+					}
+					else
+					{
+						NewParamDataPin->bDefaultValueIsIgnored = false;
+					}
+
+					// Attempt to restore old connections and default settings
+					if (OldConnections.IsValidIndex(i))
+					{
+						for (UEdGraphPin* OldLinkedPin : OldConnections[i])
+						{
+							if (OldLinkedPin && OldLinkedPin->GetOwningNode())
+							{
+								NewParamDataPin->MakeLinkTo(OldLinkedPin);
+							}
+						}
+					}
+
+					if (OldDefaultValues.IsValidIndex(i))
+					{
+						NewParamDataPin->DefaultValue = OldDefaultValues[i];
+					}
+
+					if (OldDefaultObjects.IsValidIndex(i))
+					{
+						NewParamDataPin->DefaultObject = OldDefaultObjects[i];
+					}
+
+					if (OldDefaultTextValues.IsValidIndex(i))
+					{
+						NewParamDataPin->DefaultTextValue = OldDefaultTextValues[i];
+					}
+				}
 			}
 		}
 	}
 
-	GetGraph()->NotifyGraphChanged();
+	GetGraph()->NotifyNodeChanged(this);
 }
 
-bool UK2Node_SendEvent::CheckParamDataPinTypeMatch(const UEdGraphPin* Pin) const
+UEdGraphPin* UK2Node_SendEvent::CreateParamDataPinAtIndex(const int32 Index, const FName PinCategory)
 {
-	const UEdGraphPin* ParamDataPin = Pin == nullptr ? GetParamDataPin() : Pin;
-	const FString EventName = GetCurrentEventName();
-	FEventTypeInfo TypeInfo;
-	if (ParamDataPin && !EventName.IsEmpty() && FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo))
-	{
-		const FEdGraphPinType& PinType = ParamDataPin->PinType;
-
-		// Check basic type information
-		if (PinType.PinCategory != TypeInfo.PinCategory ||
-		    PinType.PinSubCategory != TypeInfo.PinSubCategory ||
-		    PinType.PinSubCategoryObject != TypeInfo.PinSubCategoryObject)
-		{
-			return false;
-		}
-
-		// Check container types
-		if (PinType.ContainerType != TypeInfo.ContainerType)
-		{
-			return false;
-		}
-
-		// For Map type, also need to check PinValueType (Value type information)
-		if (TypeInfo.IsMap())
-		{
-			if (PinType.PinValueType.TerminalCategory != TypeInfo.PinValueType.TerminalCategory ||
-			    PinType.PinValueType.TerminalSubCategory != TypeInfo.PinValueType.TerminalSubCategory ||
-			    PinType.PinValueType.TerminalSubCategoryObject != TypeInfo.PinValueType.TerminalSubCategoryObject)
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-UEdGraphPin* UK2Node_SendEvent::CreateParamDataPin(const FName PinCategory)
-{
-	UEdGraphPin* Pin = CreatePin(EGPD_Input, PinCategory, FK2Node_SendEventPinName::ParamDataName);
+	const FName PinName = UGameEventNodeUtils::GetMultiParameterPinName(FK2Node_SendEventPinName::ParamDataName, Index);
+	UEdGraphPin* Pin = CreatePin(EGPD_Input, PinCategory, PinName);
 	if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object || Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct)
 	{
 		Pin->bDefaultValueIsIgnored = true;
@@ -369,7 +438,87 @@ UEdGraphPin* UK2Node_SendEvent::CreateParamDataPin(const FName PinCategory)
 	return Pin;
 }
 
-#pragma region GetPin
+TArray<UEdGraphPin*> UK2Node_SendEvent::GetAllParamDataPins() const
+{
+	TArray<UEdGraphPin*> ParamDataPins;
+
+	for (int32 i = 0; i < GlobalConfig.MaxParameterNum; ++i)
+	{
+		if (UEdGraphPin* Pin = GetParamDataPinByIndex(i))
+		{
+			ParamDataPins.Add(Pin);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return ParamDataPins;
+}
+
+UEdGraphPin* UK2Node_SendEvent::GetParamDataPinByIndex(const int32 Index) const
+{
+	const FName PinName = UGameEventNodeUtils::GetMultiParameterPinName(FK2Node_SendEventPinName::ParamDataName, Index);
+	return FindPin(PinName);
+}
+
+bool UK2Node_SendEvent::CheckParamDataPinsTypeMatch() const
+{
+	const FString EventName = GetCurrentEventName();
+	FEventTypeInfo TypeInfo;
+	if (EventName.IsEmpty() || !FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo))
+	{
+		return true;
+	}
+
+	const TArray<UEdGraphPin*> ParamDataPins = GetAllParamDataPins();
+	const int32 ExpectedParamCount = TypeInfo.GetParameterCount();
+
+	if (ParamDataPins.Num() != ExpectedParamCount)
+	{
+		return false;
+	}
+
+	for (int32 i = 0; i < ParamDataPins.Num(); ++i)
+	{
+		const UEdGraphPin* ParamDataPin = ParamDataPins[i];
+		const FEventParameterInfo* ExpectedParam = TypeInfo.GetParameterInfo(i);
+
+		if (!ParamDataPin || !ExpectedParam)
+		{
+			return false;
+		}
+
+		const FEdGraphPinType& PinType = ParamDataPin->PinType;
+
+		if (PinType.PinCategory != ExpectedParam->PinCategory ||
+		    PinType.PinSubCategory != ExpectedParam->PinSubCategory ||
+		    PinType.PinSubCategoryObject != ExpectedParam->PinSubCategoryObject)
+		{
+			return false;
+		}
+
+		if (PinType.ContainerType != ExpectedParam->ContainerType)
+		{
+			return false;
+		}
+
+		if (ExpectedParam->IsMap())
+		{
+			if (PinType.PinValueType.TerminalCategory != ExpectedParam->PinValueType.TerminalCategory ||
+			    PinType.PinValueType.TerminalSubCategory != ExpectedParam->PinValueType.TerminalSubCategory ||
+			    PinType.PinValueType.TerminalSubCategoryObject != ExpectedParam->PinValueType.TerminalSubCategoryObject)
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+#pragma region "GetPin"
 UEdGraphPin* UK2Node_SendEvent::GetSelfPin() const
 {
 	UEdGraphPin* Pin = FindPin(UEdGraphSchema_K2::PN_Self);

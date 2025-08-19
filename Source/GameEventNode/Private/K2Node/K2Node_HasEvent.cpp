@@ -28,8 +28,6 @@ void UK2Node_HasEvent::AllocateDefaultPins()
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FK2Node_HasEventPinName::ReturnValuePinName);
 	ReturnValuePin->PinFriendlyName = NSLOCTEXT("K2Node", "HasEvent_ReturnValue", "Event Exists");
 	ReturnValuePin->PinToolTip = NSLOCTEXT("K2Node", "HasEvent_ReturnValue_Tooltip", "Whether the event exists").ToString();
-
-	UpdatePinVisibility();
 }
 
 FText UK2Node_HasEvent::GetTooltipText() const
@@ -55,21 +53,7 @@ void UK2Node_HasEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGr
 	static const FName WorldContextObjectParamName(TEXT("WorldContextObject"));
 	static const FName EventNameParamName(TEXT("EventName"));
 
-	const UEdGraphPin* EventIdTypePin = GetEventIdTypePin();
-
-	// Determine which event identifier type to use
-	const bool bIsEventString = UGameEventNodeUtils::IsStringEventId(EventIdTypePin);
-
-	// Create function call node
-	UFunction* HasEventFunction;
-	if (bIsEventString)
-	{
-		HasEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, HasEvent_StrKey));
-	}
-	else
-	{
-		HasEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, HasEvent));
-	}
+	const UFunction* HasEventFunction = UGameEventNodeUtils::StaticClass()->FindFunctionByName(GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, HasEvent));
 
 	if (!HasEventFunction)
 	{
@@ -88,14 +72,7 @@ void UK2Node_HasEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGr
 
 	if (UEdGraphPin* CallFuncEventNamePin = CallFuncNode->FindPin(EventNameParamName))
 	{
-		if (bIsEventString)
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventStringPin(), *CallFuncEventNamePin);
-		}
-		else
-		{
-			CompilerContext.MovePinLinksToIntermediate(*GetEventTagPin(), *CallFuncEventNamePin);
-		}
+		ConnectEventNameWithTagConversion(CompilerContext, SourceGraph, CallFuncEventNamePin);
 	}
 
 	UEdGraphPin* ReturnValuePin = GetReturnValuePin();

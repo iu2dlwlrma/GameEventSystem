@@ -346,13 +346,13 @@ private:
 	template<typename T>
 	static T ExtractParameterValue(const FPropertyContext& Context)
 	{
-		if (!Context.Property || !Context.PropertyPtr)
+		if (!Context.Property.Get() || !Context.PropertyPtr)
 		{
 			FLogger::Get().LogWarning(TEXT("ExtractParameterValue - Invalid property context"));
 			return T {};
 		}
 
-		if (!TPropertyMatcher<T>::DoesMatchProperty(Context.Property))
+		if (!TPropertyMatcher<T>::DoesMatchProperty(Context.Property.Get()))
 		{
 			FLogger::Get().LogWarning(TEXT("ExtractParameterValue - Type mismatch: expected %s"), GetPropertyNameForType<T>());
 			return T {};
@@ -786,7 +786,7 @@ void FGameEventPropertyHelper::ExtractAndInvokeValue(const void* PropertyPtr, La
 template<typename... Args, typename Lambda>
 auto FGameEventPropertyHelper::CreatePropertyWrapper(Lambda&& InLambda)
 {
-	return [InLambda](const FEventProperty& Property) mutable -> void
+	return [InLambda](const FPropertyContext& Property) mutable -> void
 	{
 		constexpr size_t ParamCount = sizeof...(Args);
 

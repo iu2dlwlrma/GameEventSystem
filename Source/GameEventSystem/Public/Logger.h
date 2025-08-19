@@ -4,6 +4,44 @@
 
 GAMEEVENTSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogGameEventSystem, VeryVerbose, All);
 
+#if UE_BUILD_SHIPPING
+#define WITH_DEBUG 0
+#else
+#define WITH_DEBUG 1
+#endif
+
+#if WITH_DEBUG
+#define WITH_DEBUG_LOG 1
+#else
+#define GAME_PROFILE_LEVEL 0
+#define WITH_DEBUG_LOG 0
+#endif
+
+#if WITH_DEBUG_LOG
+struct GAMEEVENTSYSTEM_API FScopedCallTracker
+{
+	explicit FScopedCallTracker(FString InScopeName);
+	explicit FScopedCallTracker(const ANSICHAR* InScopeName);
+	~FScopedCallTracker();
+
+	static bool bIsOn;
+
+	static float PerfMarkLv1Time;
+	static float PerfMarkLv2Time;
+
+private:
+	double RecordedStartTime;
+	FString ScopeName;
+};
+
+#define GAME_SCOPED_TRACK_LOG(ScopeName) FScopedCallTracker _ScopedCallTrackerDummy(ScopeName)
+#define GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(ScopeName) FScopedCallTracker _ScopedCallTrackerDummy(FString::Printf(TEXT("[%s][%s] %hs"), *ScopeName, *GetNameSafe(this), __FUNCTION__))
+#define GAME_SCOPED_TRACK_LOG_AUTO() FScopedCallTracker _ScopedCallTrackerDummy(ANSI_TO_TCHAR(__FUNCTION__))
+#else
+#define GAME_SCOPED_TRACK_LOG(ScopeName)
+#define GAME_SCOPED_TRACK_LOG_AUTO(ScopeName)
+#endif
+
 /**
  * GameEventSystem Log Manager
  * Provides unified logging interface with support for different log levels and formatted output
