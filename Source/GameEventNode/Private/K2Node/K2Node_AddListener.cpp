@@ -33,7 +33,7 @@ const FName FK2Node_AddListenerPinName::DataTypePinName(TEXT("DataType"));
 
 void UK2Node_AddListener::AllocateDefaultPins()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::AllocateDefaultPins();
 
@@ -43,8 +43,8 @@ void UK2Node_AddListener::AllocateDefaultPins()
 
 	// Create Self pin
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "AddListener_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_Self_Tooltip", "Target object for listening").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
@@ -53,52 +53,52 @@ void UK2Node_AddListener::AllocateDefaultPins()
 	if (UEdGraphPin* EventIdTypePin = GetEventIdTypePin())
 	{
 		EventIdTypePin->DefaultValue = StaticEnum<EEventIdType>()->GetNameStringByValue(static_cast<int64>(EEventIdType::TagBased));
-		EventIdTypePin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_EventIdType_Tooltip", "Event ID type: String or GameplayTag").ToString();
+		EventIdTypePin->PinToolTip = NSLOCTEXT("GameEventNode", "EventIdType_Tooltip", "Event ID type: String or GameplayTag").ToString();
 	}
 
 	if (UEdGraphPin* EventTagPin = GetEventTagPin())
 	{
-		EventTagPin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_EventTag_Tooltip", "Event name to register").ToString();
+		EventTagPin->PinToolTip = NSLOCTEXT("GameEventNode", "EventTag_Tooltip", "Event name to register").ToString();
 	}
 
 	if (UEdGraphPin* EventStringPin = GetEventStringPin())
 	{
-		EventStringPin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_EventString_Tooltip", "Event name to register").ToString();
+		EventStringPin->PinToolTip = NSLOCTEXT("GameEventNode", "EventString_Tooltip", "Event name to register").ToString();
 	}
 
 	// Create binding type selection pin
 	UEdGraphPin* EventBindTypePin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Byte, StaticEnum<EEventBindType>(), FK2Node_AddListenerPinName::EventBindTypePinName);
 	EventBindTypePin->DefaultValue = StaticEnum<EEventBindType>()->GetNameStringByValue(static_cast<int64>(EEventBindType::FunctionName));
-	EventBindTypePin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_BindType_Tooltip", "Binding type: Function name or Delegate").ToString();
+	EventBindTypePin->PinToolTip = NSLOCTEXT("GameEventNode", "BindType_Tooltip", "Binding type: Function name or Delegate").ToString();
 
 	// Create function name pin
 	UEdGraphPin* FunctionNamePin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_String, FK2Node_AddListenerPinName::FunctionNamePinName);
-	FunctionNamePin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_FunctionName_Tooltip", "Target object's function name").ToString();
+	FunctionNamePin->PinToolTip = NSLOCTEXT("GameEventNode", "FunctionName_Tooltip", "Target object's function name").ToString();
 
 	// Create delegate pin
 	UEdGraphPin* DelegatePin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Delegate, FK2Node_AddListenerPinName::DelegatePinName);
-	DelegatePin->PinToolTip = NSLOCTEXT("K2Node", "AddListener_Delegate_Tooltip", "Delegate to bind").ToString();
+	DelegatePin->PinToolTip = NSLOCTEXT("GameEventNode", "Delegate_Tooltip", "Delegate to bind").ToString();
 }
 
 FText UK2Node_AddListener::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "AddListener_Tooltip", "Add a listener to the game event system. 【{0}】"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "AddListener_Tooltip", "Add a listener to the game event system. 【{0}】"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_AddListener::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "AddListener_Title", "Add Listener");
+	return NSLOCTEXT("GameEventNode", "AddListener_Title", "Add Listener");
 }
 
 FText UK2Node_AddListener::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "AddListener_Keywords", "{0} addevent add listener addlistener bind subscribe register hook attach"),
+	return FText::Format(NSLOCTEXT("GameEventNode", "AddListener_Keywords", "{0} addevent add listener addlistener bind subscribe register hook attach"),
 	                     Super::GetKeywords());
 }
 
 void UK2Node_AddListener::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	//Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
@@ -115,7 +115,7 @@ void UK2Node_AddListener::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*
 		}
 		if (bIsDataTypePin)
 		{
-			UEdGraphPin* NewPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Wildcard, OldPin->PinName);
+			UEdGraphPin* NewPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Boolean, OldPin->PinName);
 			NewPin->PinType = OldPin->PinType;
 			NewPin->DefaultObject = OldPin->DefaultObject;
 			NewPin->DefaultTextValue = OldPin->DefaultTextValue;
@@ -129,7 +129,7 @@ void UK2Node_AddListener::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*
 
 void UK2Node_AddListener::PostReconstructNode()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PostReconstructNode();
 
@@ -138,7 +138,7 @@ void UK2Node_AddListener::PostReconstructNode()
 
 void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::ExpandNode(CompilerContext, SourceGraph);
 
@@ -154,7 +154,7 @@ void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UE
 
 	if (!FunctionNamePin)
 	{
-		CompilerContext.MessageLog.Error(*NSLOCTEXT("K2Node", "InvalidPins", "Invalid pins in @@").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "InvalidPins", "Invalid pins in @@").ToString(), this);
 		return;
 	}
 
@@ -169,6 +169,17 @@ void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UE
 	}
 	else
 	{
+		if (!AnalyzeFunctionAndRegisterEventType())
+		{
+			CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "InvalidFunction", "Cannot analyze function signature ! @@").ToString(), this);
+			return;
+		}
+		if (!CheckFunctionParamCount())
+		{
+			CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "CheckFunctionParamCount", "function too many parameters ! @@").ToString(), this);
+			return;
+		}
+
 		CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, AddListener_ByFuncName);
 	}
 
@@ -203,7 +214,7 @@ void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UE
 
 void UK2Node_AddListener::PinConnectionListChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PinConnectionListChanged(Pin);
 
@@ -223,7 +234,7 @@ void UK2Node_AddListener::PinConnectionListChanged(UEdGraphPin* Pin)
 
 void UK2Node_AddListener::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	// Base class handles event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
@@ -261,7 +272,7 @@ void UK2Node_AddListener::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 void UK2Node_AddListener::PinTypeChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PinTypeChanged(Pin);
 
@@ -340,8 +351,8 @@ void UK2Node_AddListener::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 		{
 			Section.AddMenuEntry(
 			                     TEXT("AddDataTypePin"),
-			                     NSLOCTEXT("K2Node", "AddDataTypePin", "Add Data Type Pin"),
-			                     NSLOCTEXT("K2Node", "AddDataTypePinTooltip", "Adds a Data Type pin to specify the delegate parameter type"),
+			                     NSLOCTEXT("GameEventNode", "AddDataTypePin", "Add Data Type Pin"),
+			                     NSLOCTEXT("GameEventNode", "AddDataTypePinTooltip", "Adds a Data Type pin to specify the delegate parameter type"),
 			                     FSlateIcon(),
 			                     FExecuteAction::CreateUObject(const_cast<UK2Node_AddListener*>(this), &UK2Node_AddListener::AddDataTypePinAtIndex, -1)
 			                    );
@@ -350,8 +361,8 @@ void UK2Node_AddListener::GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeC
 		{
 			Section.AddMenuEntry(
 			                     TEXT("RemoveDataTypePin"),
-			                     NSLOCTEXT("K2Node", "RemoveDataTypePin", "Remove Last Data Type Pin"),
-			                     NSLOCTEXT("K2Node", "RemoveDataTypePinTooltip", "Removes the last Data Type pin"),
+			                     NSLOCTEXT("GameEventNode", "RemoveDataTypePin", "Remove Last Data Type Pin"),
+			                     NSLOCTEXT("GameEventNode", "RemoveDataTypePinTooltip", "Removes the last Data Type pin"),
 			                     FSlateIcon(),
 			                     FExecuteAction::CreateUObject(const_cast<UK2Node_AddListener*>(this), &UK2Node_AddListener::RemoveDataTypePinAtIndex, -1)
 			                    );
@@ -368,27 +379,27 @@ bool UK2Node_AddListener::CheckUpdatePinCondition(const UEdGraphPin* Pin) const
 
 void UK2Node_AddListener::UpdatePinVisibility()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const bool bIsDelegate = UGameEventNodeUtils::IsDelegateMode(GetBindTypePin());
-	if (UEdGraphPin* FunctionNamePin = GetFunctionNamePin())
+	UEdGraphPin* FunctionNamePin = GetFunctionNamePin();
+	UEdGraphPin* DelegatePin = GetDelegatePin();
+	if (FunctionNamePin && DelegatePin)
 	{
-		UGameEventNodeUtils::ClearPinValue(FunctionNamePin);
-		FunctionNamePin->bHidden = bIsDelegate;
-	}
-	if (UEdGraphPin* DelegatePin = GetDelegatePin())
-	{
-		DelegatePin->bHidden = !bIsDelegate;
-	}
-
-	if (!bIsDelegate)
-	{
-		TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
-		for (UEdGraphPin* DataTypePin : DataTypePins)
+		if (bIsDelegate)
 		{
-			if (DataTypePin)
+			UGameEventNodeUtils::ClearPinValue(FunctionNamePin);
+			DelegatePin->bHidden = false;
+		}
+		else
+		{
+			UGameEventNodeUtils::ClearPinValue(DelegatePin);
+			FunctionNamePin->bHidden = false;
+
+			TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
+			for (UEdGraphPin* DataTypePin : DataTypePins)
 			{
-				DataTypePin->bHidden = !bIsDelegate;
+				DataTypePin->bHidden = false;
 				Pins.Remove(DataTypePin);
 				DestroyPin(DataTypePin);
 			}
@@ -400,14 +411,6 @@ void UK2Node_AddListener::UpdatePinVisibility()
 
 void UK2Node_AddListener::UpdateEventSignature() const
 {
-	AnalyzeFunctionAndRegisterEventType();
-	UpdateCustomEventSignatureFromDataType();
-}
-
-void UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
-{
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
-
 	const FString EventName = GetCurrentEventName();
 	if (EventName.IsEmpty())
 	{
@@ -418,35 +421,48 @@ void UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
 	if (UGameEventNodeUtils::IsDelegateMode(GetBindTypePin()))
 	{
 		TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
+		FEventTypeInfo TypeInfo;
+
 		if (DataTypePins.Num() > 0)
 		{
 			TArray<FEventParameterInfo> Parameters;
 			for (const UEdGraphPin* DataTypePin : DataTypePins)
 			{
-				if (DataTypePin && DataTypePin->PinType.PinCategory != UEdGraphSchema_K2::PC_Wildcard)
-				{
-					Parameters.Add(FEventParameterInfo(DataTypePin->PinType));
-				}
+				Parameters.Add(FEventParameterInfo(DataTypePin->PinType));
 			}
 
 			if (Parameters.Num() > 0)
 			{
-				const FEventTypeInfo TypeInfo(Parameters);
-				FGameEventTypeManager::Get()->RegisterEventType(EventName, TypeInfo);
-				return;
+				TypeInfo = FEventTypeInfo(Parameters);
 			}
 		}
 
-		const FEventTypeInfo TypeInfo;
 		FGameEventTypeManager::Get()->RegisterEventType(EventName, TypeInfo);
+
+		UpdateCustomEventSignatureFromDataType();
+
 		return;
+	}
+
+	AnalyzeFunctionAndRegisterEventType();
+}
+
+bool UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
+{
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+
+	const FString EventName = GetCurrentEventName();
+	if (EventName.IsEmpty())
+	{
+		UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+		return false;
 	}
 
 	const UEdGraphPin* FunctionNamePin = GetFunctionNamePin();
 	if (!FunctionNamePin || FunctionNamePin->GetDefaultAsString().IsEmpty())
 	{
 		UE_LOG_GAS_WARNING(TEXT("AddListener: Function name is empty, skipping type analysis"));
-		return;
+		return false;
 	}
 
 	const FString FunctionName = FunctionNamePin->GetDefaultAsString();
@@ -485,7 +501,26 @@ void UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
 
 	UE_LOG_GAS_EDITOR(TEXT("AddListener: Final target class: %s, looking for function: %s"), *TargetClass->GetName(), *FunctionName);
 
-	FGameEventTypeManager::Get()->AnalyzeAndRegisterFunctionType(EventName, TargetClass, FunctionName);
+	return FGameEventTypeManager::Get()->AnalyzeAndRegisterFunctionType(EventName, TargetClass, FunctionName);
+}
+
+bool UK2Node_AddListener::CheckFunctionParamCount() const
+{
+	const FString EventName = GetCurrentEventName();
+	if (EventName.IsEmpty())
+	{
+		UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+		return false;
+	}
+
+	FEventTypeInfo TypeInfo;
+	FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
+
+	if (TypeInfo.GetParameterCount() > GlobalConfig.MaxParameterNum)
+	{
+		return false;
+	}
+	return true;
 }
 
 void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
@@ -495,7 +530,7 @@ void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
 		return;
 	}
 
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	if (GEditor && UGameEventNodeUtils::IsDelegateMode(GetBindTypePin()))
 	{
@@ -558,8 +593,7 @@ void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
 							CustomEventNode->UserDefinedPins.Empty();
 							for (int32 i = 0; i < DataTypePins.Num(); ++i)
 							{
-								const UEdGraphPin* DataTypePin = DataTypePins[i];
-								if (DataTypePin && DataTypePin->PinType.PinCategory != UEdGraphSchema_K2::PC_Wildcard)
+								if (const UEdGraphPin* DataTypePin = DataTypePins[i])
 								{
 									const TSharedPtr<FUserPinInfo> NewParamPin = MakeShareable(new FUserPinInfo());
 									NewParamPin->DesiredPinDirection = EGPD_Output;
@@ -581,7 +615,7 @@ void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
 
 void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* CallFuncNode, FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	if (!CallFuncNode || !SourceGraph)
 	{
@@ -631,7 +665,7 @@ void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* Ca
 
 void UK2Node_AddListener::CreateDataConversionNodes(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, const UK2Node_CustomEvent* WrapperEventNode)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const UEdGraphPin* DelegatePin = GetDelegatePin();
 	UEdGraphPin* LinkedPin = DelegatePin->LinkedTo[0];
@@ -707,16 +741,16 @@ void UK2Node_AddListener::CreateDataConversionNodes(FKismetCompilerContext& Comp
 	}
 	else
 	{
-		CompilerContext.MessageLog.Warning(*NSLOCTEXT("K2Node", "AddListener_DelegateInvalid", "Delegate node is invalid, please recreate! @@").ToString(), this);
+		CompilerContext.MessageLog.Warning(*NSLOCTEXT("GameEventNode", "AddListener_DelegateInvalid", "Delegate node is invalid, please recreate! @@").ToString(), this);
 	}
 }
 
 void UK2Node_AddListener::AddDataTypePinAtIndex(const int32 Index)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const int32 CurrentCount = GetDataTypePinCount();
-	const int32 TargetIndex = (Index < 0) ? CurrentCount : FMath::Clamp(Index, 0, CurrentCount);
+	const int32 TargetIndex = Index < 0 ? CurrentCount : FMath::Clamp(Index, 0, CurrentCount);
 
 	const FName PinName = UGameEventNodeUtils::GetMultiParameterPinName(FK2Node_AddListenerPinName::DataTypePinName, TargetIndex);
 	UEdGraphPin* DataTypePin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Boolean, PinName);
@@ -728,7 +762,7 @@ void UK2Node_AddListener::AddDataTypePinAtIndex(const int32 Index)
 
 void UK2Node_AddListener::RemoveDataTypePinAtIndex(const int32 Index)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 	TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
 	if (DataTypePins.Num() > 0 && Index < DataTypePins.Num())
 	{

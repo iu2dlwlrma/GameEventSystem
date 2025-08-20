@@ -1,28 +1,29 @@
 #include "Logger.h"
 DEFINE_LOG_CATEGORY(LogGameEventSystem);
 
-#if WITH_DEBUG_LOG
-
-DEFINE_LOG_CATEGORY_STATIC(LogScopedCallTrack, Log, All)
+#if WITH_GES_DEBUG_LOG
+DEFINE_LOG_CATEGORY_STATIC(LogScopedCallTrack, All, All)
 
 bool FScopedCallTracker::bIsOn = true;
 float FScopedCallTracker::PerfMarkLv1Time = 0.1f;
 float FScopedCallTracker::PerfMarkLv2Time = 0.5f;
 
-FScopedCallTracker::FScopedCallTracker(FString InScopeName)
+FScopedCallTracker::FScopedCallTracker(FString InScopeName, const ELogVerbosity::Type InVerbosity)
 {
 	ScopeName = InScopeName;
 	RecordedStartTime = FPlatformTime::Seconds();
+	Verbosity = InVerbosity;
 
 	if (bIsOn)
 	{
-		UE_LOG(LogScopedCallTrack, Log, TEXT("%s Begin"), *ScopeName);
+		FMsg::Logf(__FILE__,__LINE__, LogScopedCallTrack.GetCategoryName(), Verbosity,TEXT("%s Begin"), *ScopeName);
 	}
 }
 
-FScopedCallTracker::FScopedCallTracker(const ANSICHAR* InScopeName) : RecordedStartTime(0)
+FScopedCallTracker::FScopedCallTracker(const ANSICHAR* InScopeName, const ELogVerbosity::Type InVerbosity) : RecordedStartTime(0),
+                                                                                                             Verbosity(ELogVerbosity::Log)
 {
-	FScopedCallTracker(FString(InScopeName));
+	FScopedCallTracker(FString(InScopeName), InVerbosity);
 }
 
 FScopedCallTracker::~FScopedCallTracker()
@@ -45,7 +46,7 @@ FScopedCallTracker::~FScopedCallTracker()
 		}
 		else
 		{
-			UE_LOG(LogScopedCallTrack, Log, TEXT("%s"), *LogString);
+			FMsg::Logf(__FILE__,__LINE__, LogScopedCallTrack.GetCategoryName(), Verbosity,TEXT("%s"), *LogString);
 		}
 	}
 }

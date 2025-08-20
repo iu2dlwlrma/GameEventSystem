@@ -27,8 +27,8 @@ void UK2Node_RemoveListener::AllocateDefaultPins()
 
 	// Input pin
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "RemoveListener_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "RemoveListener_Self_Tooltip", "Target object for removing event").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
@@ -36,18 +36,17 @@ void UK2Node_RemoveListener::AllocateDefaultPins()
 
 FText UK2Node_RemoveListener::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "RemoveListener_Tooltip", "Remove listener from game event system. 【{0}】"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveListener_Tooltip", "Remove listener from game event system. 【{0}】"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_RemoveListener::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "RemoveListener_Title", "Remove Listener");
+	return NSLOCTEXT("GameEventNode", "RemoveListener_Title", "Remove Listener");
 }
 
 FText UK2Node_RemoveListener::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "RemoveListener_Keywords", "{0} removeevent remove listener removelistener unbind unsubscribe unregister detach"),
-	                     Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveListener_Keywords", "{0} removeevent remove listener removelistener unbind unsubscribe unregister detach"), Super::GetKeywords());
 }
 
 void UK2Node_RemoveListener::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)

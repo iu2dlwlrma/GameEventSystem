@@ -37,7 +37,8 @@ protected:
 	virtual void UpdatePinVisibility() override;
 
 	void UpdateEventSignature() const;
-	void AnalyzeFunctionAndRegisterEventType() const;
+	bool AnalyzeFunctionAndRegisterEventType() const;
+	bool CheckFunctionParamCount() const;
 	void UpdateCustomEventSignatureFromDataType() const;
 	void HandleDelegateExpansion(const UK2Node_CallFunction* CallFuncNode, FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph);
 	void CreateDataConversionNodes(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, const UK2Node_CustomEvent* WrapperEventNode);

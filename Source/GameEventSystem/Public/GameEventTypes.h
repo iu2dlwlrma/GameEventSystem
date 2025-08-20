@@ -217,6 +217,20 @@ struct GAMEEVENTSYSTEM_API FListenerContext
 		return false;
 	}
 
+	FString ToString() const
+	{
+		if (!Receiver.IsValid())
+		{
+			return TEXT("Invalid Receiver");
+		}
+		return FString::Printf(TEXT("%s::%s"), *Receiver->GetName(), *GetName());
+	}
+
+	FString GetName() const
+	{
+		return FunctionName.IsEmpty() ? PropertyDelegate.IsBound() ? PropertyDelegate.GetFunctionName().ToString() : FunctionName : "Lambda";
+	}
+
 	friend uint32 GetTypeHash(const FListenerContext& Listener)
 	{
 		uint32 Hash = GetTypeHash(Listener.Receiver);

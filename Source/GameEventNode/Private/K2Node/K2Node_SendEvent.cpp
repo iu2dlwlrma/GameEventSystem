@@ -22,7 +22,7 @@ const FName FK2Node_SendEventPinName::ParamDataName(TEXT("ParamData"));
 
 void UK2Node_SendEvent::AllocateDefaultPins()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::AllocateDefaultPins();
 
@@ -32,8 +32,8 @@ void UK2Node_SendEvent::AllocateDefaultPins()
 
 	// Self pin
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "SendEvent_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "SendEvent_Self_Tooltip", "Target object for sending event").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
@@ -44,23 +44,22 @@ void UK2Node_SendEvent::AllocateDefaultPins()
 
 FText UK2Node_SendEvent::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "SendEvent_Tooltip", "Sends an event to the game event system. 【{0}】"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "SendEvent_Tooltip", "Sends an event to the game event system. 【{0}】"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_SendEvent::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "SendEvent_Title", "Send Event");
+	return NSLOCTEXT("GameEventNode", "SendEvent_Title", "Send Event");
 }
 
 FText UK2Node_SendEvent::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "SendEvent_Keywords", "{0} send event sendevent trigger fire emit dispatch broadcast"),
-	                     Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "SendEvent_Keywords", "{0} send event sendevent trigger fire emit dispatch broadcast"), Super::GetKeywords());
 }
 
 void UK2Node_SendEvent::PostReconstructNode()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PostReconstructNode();
 
@@ -69,7 +68,7 @@ void UK2Node_SendEvent::PostReconstructNode()
 
 void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	// Call base class method to handle event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
@@ -84,7 +83,7 @@ void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	// Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
@@ -133,7 +132,7 @@ void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>&
 
 void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::ExpandNode(CompilerContext, SourceGraph);
 
@@ -160,12 +159,12 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 
 	if (!ExecPin || !ThenPin || !SelfPin)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("InvalidPins", "Invalid pins in @@").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "InvalidPins", "Invalid pins in @@").ToString(), this);
 		return;
 	}
 	if (!CheckParamDataPinsTypeMatch())
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("ParamDataMatch", "Type mismatch, please refresh the node! @@").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "ParamDataMatch", "Type mismatch, please refresh the node! @@").ToString(), this);
 		return;
 	}
 
@@ -176,7 +175,7 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 		const bool bValid = ParamDataPin != nullptr || !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject || !ParamDataPin->DefaultTextValue.IsEmpty();
 		if (!bValid)
 		{
-			CompilerContext.MessageLog.Error(*LOCTEXT("ParamDataValid", "Invalid parameters! @@").ToString(), this);
+			CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "ParamDataValid", "Invalid parameters! @@").ToString(), this);
 			return;
 		}
 	}
@@ -308,7 +307,7 @@ void UK2Node_SendEvent::RefreshPinTypes()
 		return;
 	}
 
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const FString EventName = GetCurrentEventName();
 	FEventTypeInfo TypeInfo;

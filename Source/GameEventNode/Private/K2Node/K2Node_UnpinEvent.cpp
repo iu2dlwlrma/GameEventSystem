@@ -27,8 +27,8 @@ void UK2Node_UnpinEvent::AllocateDefaultPins()
 
 	// Self pin
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "UnpinEvent_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "UnpinEvent_Self_Tooltip", "World context object").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
@@ -36,18 +36,17 @@ void UK2Node_UnpinEvent::AllocateDefaultPins()
 
 FText UK2Node_UnpinEvent::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "UnpinEvent_Tooltip", "Unpin the specified event and clear pinned data. [{0}]"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "UnpinEvent_Tooltip", "Unpin the specified event and clear pinned data. [{0}]"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_UnpinEvent::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "UnpinEvent_Title", "Unpin Event");
+	return NSLOCTEXT("GameEventNode", "UnpinEvent_Title", "Unpin Event");
 }
 
 FText UK2Node_UnpinEvent::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "UnpinEvent_Keywords", "{0} unpin event unpinevent clear reset release unlock"),
-	                     Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "UnpinEvent_Keywords", "{0} unpin event unpinevent clear reset release unlock"), Super::GetKeywords());
 }
 
 void UK2Node_UnpinEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
@@ -61,7 +60,7 @@ void UK2Node_UnpinEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEd
 
 	if (!UnpinEventFunction)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("UnpinEventFunctionNotFound", "UnpinEvent function not found").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "UnpinEventFunctionNotFound", "UnpinEvent function not found").ToString(), this);
 		return;
 	}
 

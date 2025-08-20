@@ -17,32 +17,32 @@ const FName FK2Node_GetEventListenerCountPinName::ReturnValuePinName(TEXT("Retur
 void UK2Node_GetEventListenerCount::AllocateDefaultPins()
 {
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "GetEventListenerCount_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_Self_Tooltip", "World context object").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	CreateEventIdentifierPins();
 
 	if (UEdGraphPin* EventIdTypePin = GetEventIdTypePin())
 	{
-		EventIdTypePin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_EventIdType_Tooltip", "Event ID type: String or GameplayTag").ToString();
+		EventIdTypePin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_EventIdType_Tooltip", "Event ID type: String or GameplayTag").ToString();
 	}
 	if (UEdGraphPin* EventTagPin = GetEventTagPin())
 	{
-		EventTagPin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_EventTag_Tooltip", "Event name to check").ToString();
+		EventTagPin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_EventTag_Tooltip", "Event name to check").ToString();
 	}
 	if (UEdGraphPin* EventStringPin = GetEventStringPin())
 	{
-		EventStringPin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_EventString_Tooltip", "Event name to check").ToString();
+		EventStringPin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_EventString_Tooltip", "Event name to check").ToString();
 	}
 
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Int, FK2Node_GetEventListenerCountPinName::ReturnValuePinName);
-	ReturnValuePin->PinFriendlyName = NSLOCTEXT("K2Node", "GetEventListenerCount_ReturnValue", "Listener Count");
-	ReturnValuePin->PinToolTip = NSLOCTEXT("K2Node", "GetEventListenerCount_ReturnValue_Tooltip", "Number of listeners for this event").ToString();
+	ReturnValuePin->PinFriendlyName = NSLOCTEXT("GameEventNode", "GetEventListenerCount_ReturnValue", "Listener Count");
+	ReturnValuePin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_ReturnValue_Tooltip", "Number of listeners for this event").ToString();
 }
 
 FText UK2Node_GetEventListenerCount::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "GetEventListenerCount_Tooltip", "Get the number of listeners for the specified event. [{0}]"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "GetEventListenerCount_Tooltip", "Get the number of listeners for the specified event. [{0}]"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_GetEventListenerCount::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -52,8 +52,7 @@ FText UK2Node_GetEventListenerCount::GetNodeTitle(ENodeTitleType::Type TitleType
 
 FText UK2Node_GetEventListenerCount::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "GetEventListenerCount_Keywords", "{0} get event listener count geteventlistenercount number amount size num"),
-	                     Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "GetEventListenerCount_Keywords", "{0} get event listener count geteventlistenercount number amount size num"), Super::GetKeywords());
 }
 
 void UK2Node_GetEventListenerCount::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
@@ -67,7 +66,7 @@ void UK2Node_GetEventListenerCount::ExpandNode(FKismetCompilerContext& CompilerC
 
 	if (!GetListenerCountFunction)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("GetEventListenerCountFunctionNotFound", "GetEventListenerCount function not found").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode","GetEventListenerCountFunctionNotFound", "GetEventListenerCount function not found").ToString(), this);
 		return;
 	}
 

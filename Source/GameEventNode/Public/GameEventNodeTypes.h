@@ -134,6 +134,12 @@ struct GAMEEVENTNODE_API FEventTypeInfo
 	{
 	}
 
+	FORCEINLINE void Add(const FName& InPinCategory, const FName& InPinSubCategory, const TWeakObjectPtr<UObject>& InPinSubCategoryObject, const FEdGraphTerminalType& InPinValueType, const EPinContainerType InContainerType)
+
+	{
+		Parameters.Add(FEventParameterInfo(InPinCategory, InPinSubCategory, InPinSubCategoryObject, InPinValueType, InContainerType));
+	}
+
 	FString ToString() const
 	{
 		if (Parameters.Num() > 0)

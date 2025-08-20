@@ -16,31 +16,28 @@ void UK2Node_RemoveAllListenersForReceiver::AllocateDefaultPins()
 	CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, UEdGraphSchema_K2::PN_Then);
 
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "RemoveAllListenersForReceiver_Receiver", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "RemoveAllListeners_Receiver_Tooltip", "Receiver object to remove all listeners from").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 }
 
 FText UK2Node_RemoveAllListenersForReceiver::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "RemoveAllListenersForReceiver_Tooltip", "Remove all event listeners registered by the specified receiver object. [{0}]"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveAllListenersForReceiver_Tooltip", "Remove all event listeners registered by the specified receiver object. [{0}]"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_RemoveAllListenersForReceiver::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "RemoveAllListenersForReceiver_Title", "Remove All Listeners For Receiver");
+	return NSLOCTEXT("GameEventNode", "RemoveAllListenersForReceiver_Title", "Remove All Listeners For Receiver");
 }
 
 FText UK2Node_RemoveAllListenersForReceiver::GetKeywords() const
 {
-	return NSLOCTEXT("K2Node",
-	                 "RemoveAllListeners_Keywords",
-	                 "remove all listeners receiver cleanup clear unbind unsubscribe "
-	                 "event game system");
+	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveAllListeners_Keywords", "{0} remove all listeners receiver cleanup clear unbind unsubscribe event game system"), Super::GetKeywords());
 }
 
 FText UK2Node_RemoveAllListenersForReceiver::GetMenuCategory() const
 {
-	return NSLOCTEXT("K2Node", "GameEventCategory", "GameEventSystem");
+	return NSLOCTEXT("GameEventNode", "GameEventCategory", "GameEventSystem");
 }
 
 void UK2Node_RemoveAllListenersForReceiver::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -66,7 +63,7 @@ void UK2Node_RemoveAllListenersForReceiver::ExpandNode(FKismetCompilerContext& C
 
 	if (!RemoveAllListenersForReceiverFunction)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("RemoveAllListenersForReceiverFunctionNotFound", "RemoveAllListenersForReceiver function not found").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "RemoveAllListenersForReceiverFunctionNotFound", "RemoveAllListenersForReceiver function not found").ToString(), this);
 		return;
 	}
 

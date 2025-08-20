@@ -125,12 +125,6 @@ private:
 	void DeleteEvent(const FEventId& EventId);
 #pragma endregion
 
-#pragma region  "Log"
-	static FString ListenerLogString(const FListenerContext& Listener);
-	static FString EventLogString(const FEventContext& Event);
-	static void LogTriggerExecution(const FListenerContext& Listener, const FString& EventKey);
-#pragma endregion  "Log"
-
 	static TSharedPtr<FGameEventManager> PrivateDefaultManager;
 
 	FCriticalSection CriticalSection;
@@ -151,7 +145,7 @@ FString FGameEventManager::AddLambdaListener(const FEventId& EventId, UObject* R
 {
 	if (!Receiver)
 	{
-		FLogger::Get().LogDisplay(TEXT("GameEventManager:AddLambdaListener, Receiver cannot be null for Lambda listener"));
+		GES_LOG_DISPLAY(TEXT("GameEventManager:AddLambdaListener, Receiver cannot be null for Lambda listener"));
 		return FString();
 	}
 

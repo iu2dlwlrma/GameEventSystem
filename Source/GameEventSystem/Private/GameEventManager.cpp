@@ -13,7 +13,6 @@ FGameEventManager::FGameEventManager() : LambdaListenerIdCounter(1) // Start fro
 
 FGameEventManager::~FGameEventManager()
 {
-	Clear();
 }
 
 TSharedPtr<FGameEventManager> FGameEventManager::Get()
@@ -21,7 +20,7 @@ TSharedPtr<FGameEventManager> FGameEventManager::Get()
 	if (!PrivateDefaultManager.IsValid())
 	{
 		PrivateDefaultManager = MakeShared<FGameEventManager>();
-		FLogger::Get().Log(TEXT("GameEventManager instance created successfully, hash: 0x%08X"), GetTypeHash(PrivateDefaultManager));
+		GES_LOG_DISPLAY(TEXT("GameEventManager instance created successfully, hash: 0x%08X"), GetTypeHash(PrivateDefaultManager));
 	}
 
 	return PrivateDefaultManager;
@@ -40,10 +39,7 @@ void FGameEventManager::Clear()
 	LambdaListenerMap.Empty();
 	LambdaListenerIdCounter.store(1);
 
-	FLogger::Get().Log(TEXT("GameEventManager cleanup completed - cleared %d events, %d receivers, %d LambdaListeners"),
-	                   EventCount,
-	                   ReceiverCount,
-	                   LambdaListenerCount);
+	GES_LOG_DISPLAY(TEXT("GameEventManager cleanup completed - cleared %d events, %d receivers, %d LambdaListeners"), EventCount, ReceiverCount, LambdaListenerCount);
 }
 
 #pragma region "static"
@@ -88,7 +84,7 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 {
 	if (!Function)
 	{
-		FLogger::Get().LogError(TEXT("ValidateFunctionParameters: Function is null"));
+		GES_LOG_ERROR(TEXT("Function is null"));
 		return false;
 	}
 
@@ -101,10 +97,10 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 
 	if (ProvidedParamCount > ExpectedParamCount)
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] - Too many parameters: expected %d, got %d"),
-		                          *FunctionName,
-		                          ExpectedParamCount,
-		                          ProvidedParamCount);
+		GES_LOG_WARNING(TEXT("Event[%s] - Too many parameters: expected %d, got %d"),
+		                *FunctionName,
+		                ExpectedParamCount,
+		                ProvidedParamCount);
 		return false;
 	}
 
@@ -113,16 +109,16 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 	{
 		if (!PropertyContexts[i].IsValid())
 		{
-			FLogger::Get().LogWarning(TEXT("Event[%s] - Parameter[%d] context is invalid"), *FunctionName, i);
+			GES_LOG_WARNING(TEXT("Event[%s] - Parameter[%d] context is invalid"), *FunctionName, i);
 			return false;
 		}
 
 		if (!IsParameterCompatible(FunctionParams[i], PropertyContexts[i].Property.Get()))
 		{
-			FLogger::Get().LogWarning(TEXT("Event[%s] - Parameter[%d] [%s] type mismatch"),
-			                          *FunctionName,
-			                          i,
-			                          *FunctionParams[i]->GetName());
+			GES_LOG_WARNING(TEXT("Event[%s] - Parameter[%d] [%s] type mismatch"),
+			                *FunctionName,
+			                i,
+			                *FunctionParams[i]->GetName());
 			return false;
 		}
 	}
@@ -270,13 +266,13 @@ void FGameEventManager::AddListener(const FEventId& EventId, const FListenerCont
 {
 	if (!EventId.IsValid())
 	{
-		FLogger::Get().LogError(TEXT("Event[%s] (AddListener) - Cannot add listener - EventId is invalid"), *EventId.GetName());
+		GES_LOG_ERROR(TEXT("Event[%s] - Cannot add listener - EventId is invalid"), *EventId.GetName());
 		return;
 	}
 
 	if (!Listener.Receiver.IsValid())
 	{
-		FLogger::Get().LogError(TEXT("Event[%s] (AddListener) - Cannot add listener - Receiver object is invalid"), *EventId.GetName());
+		GES_LOG_ERROR(TEXT("Event[%s] - Cannot add listener - Receiver object is invalid"), *EventId.GetName());
 		return;
 	}
 
@@ -292,10 +288,9 @@ void FGameEventManager::AddListener(const FEventId& EventId, const FListenerCont
 	{
 		if (!NewListener.LinkFunction())
 		{
-			FLogger::Get().LogError(TEXT("Event[%s] (AddListener) - Listener registration failed - Cannot link function [%s::%s]"),
-			                        *EventId.GetName(),
-			                        *NewListener.Receiver->GetName(),
-			                        *NewListener.FunctionName);
+			GES_LOG_ERROR(TEXT("Event[%s] - Listener registration failed - Cannot link function: %s"),
+			              *EventId.GetName(),
+			              *NewListener.ToString());
 			return;
 		}
 	}
@@ -304,9 +299,9 @@ void FGameEventManager::AddListener(const FEventId& EventId, const FListenerCont
 
 	if (TargetEvent.Listeners.Contains(NewListener))
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (AddListener) - Listener already exists, skipping duplicate registration - %s"),
-		                          *EventId.GetName(),
-		                          *ListenerLogString(NewListener));
+		GES_LOG_WARNING(TEXT("Event[%s] - Listener already exists, skipping duplicate registration: %s"),
+		                *EventId.GetName(),
+		                *NewListener.ToString());
 		return;
 	}
 
@@ -332,13 +327,12 @@ void FGameEventManager::AddListener(const FEventId& EventId, const FListenerCont
 		LambdaListenerMap.Add(NewListener.FunctionName, NewListener);
 	}
 
-	const FString ReceiverName = NewListener.Receiver.IsValid() ? NewListener.Receiver->GetName() : TEXT("Unknown Receiver");
-	FLogger::Get().LogDisplay(TEXT("Event[%s] (AddListener) - Listener registered successfully: Receiver[%s] -> Function[%s]"), *EventId.GetName(), *ReceiverName, *NewListener.FunctionName);
+	GES_LOG_DISPLAY(TEXT("Event[%s] - Listener registered successfully -> %s"), *EventId.GetName(), *NewListener.ToString());
 
 	// Handle immediate trigger for pinned events
 	if (TargetEvent.bPinned)
 	{
-		FLogger::Get().LogDisplay(TEXT("Event[%s] (AddListener) - Pinned event detected, preparing to send to new listener"), *EventId.GetName());
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Pinned event detected, preparing to send to new listener"), *EventId.GetName());
 
 		if (TargetEvent.HasValidParameters())
 		{
@@ -347,7 +341,7 @@ void FGameEventManager::AddListener(const FEventId& EventId, const FListenerCont
 		else
 		{
 			SendEventInternal(&NewListener);
-			LogTriggerExecution(NewListener, EventId.GetName());
+			GES_LOG_DISPLAY(TEXT("Event[%s] -Triggered successfully -> %s"), *EventId.GetName(), *NewListener.ToString());
 		}
 	}
 }
@@ -356,7 +350,7 @@ void FGameEventManager::AddListenerFunction(const FEventId& EventId, UObject* Re
 {
 	if (!Receiver || FunctionName.IsEmpty())
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (AddListenerFunction) - AddListenerFunction Failed"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - AddListenerFunction Failed"), *EventId.GetName());
 		return;
 	}
 
@@ -371,10 +365,10 @@ void FGameEventManager::AddListenerFunction(const FEventId& EventId, UObject* Re
 	}
 	else
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (AddListenerFunction) Failed to find function '%s' in object '%s'"),
-		                          *EventId.GetName(),
-		                          *FunctionName,
-		                          *Receiver->GetClass()->GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] Failed to find function '%s' in object '%s'"),
+		                *EventId.GetName(),
+		                *FunctionName,
+		                *Receiver->GetClass()->GetName());
 	}
 }
 
@@ -386,7 +380,7 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, const FListenerC
 
 	if (!EventMap.Contains(EventId))
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveListener) - Attempting to remove listener from non-existent event"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Attempting to remove listener from non-existent event"), *EventId.GetName());
 		return;
 	}
 
@@ -404,9 +398,7 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, const FListenerC
 		{
 			TargetEvent.Listeners.RemoveAt(i);
 			InvalidRemovedCount++;
-			FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) - Cleaning up invalid listener, index: %d"),
-			                          *EventId.GetName(),
-			                          i);
+			GES_LOG_DISPLAY(TEXT("Event[%s] - Cleaning up invalid listener, index: %d"), *EventId.GetName(), i);
 			continue;
 		}
 
@@ -432,9 +424,7 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, const FListenerC
 					if (Contexts->Num() == 0)
 					{
 						ReceiverMap.Remove(ReceiverObj);
-						FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) All listeners for receiver[%s] have been removed, cleaning from mapping table"),
-						                          *EventId.GetName(),
-						                          *ReceiverObj->GetName());
+						GES_LOG_DISPLAY(TEXT("Event[%s] All listeners for receiver [%s] have been removed, cleaning from mapping table"), *EventId.GetName(), *ReceiverObj->GetName());
 					}
 				}
 			}
@@ -445,8 +435,7 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, const FListenerC
 				LambdaListenerMap.Remove(Listener.FunctionName);
 			}
 
-			const FString ReceiverName = Listener.Receiver.IsValid() ? Listener.Receiver->GetName() : TEXT("Invalid");
-			FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) Listener removed successfully: Receiver[%s]"), *EventId.GetName(), *ReceiverName);
+			GES_LOG_DISPLAY(TEXT("Event[%s] Listener removed successfully -> %s"), *EventId.GetName(), *Listener.ToString());
 
 			break;
 		}
@@ -454,30 +443,22 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, const FListenerC
 
 	if (RemovedCount > 0)
 	{
-		FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) - Listener removal completed - Removed %d target listeners, cleaned %d invalid listeners, current count: %d"),
-		                          *EventId.GetName(),
-		                          RemovedCount,
-		                          InvalidRemovedCount,
-		                          TargetEvent.Listeners.Num());
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Listener removal completed - Removed %d target listeners, cleaned %d invalid listeners, current count: %d"), *EventId.GetName(), RemovedCount, InvalidRemovedCount, TargetEvent.Listeners.Num());
 	}
 	else if (InvalidRemovedCount > 0)
 	{
-		FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) - Cleaned %d invalid listeners, but target listener not found"),
-		                          *EventId.GetName(),
-		                          InvalidRemovedCount);
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Cleaned %d invalid listeners, but target listener not found"), *EventId.GetName(), InvalidRemovedCount);
 	}
 	else
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveListener) - Listener to remove not found in [%s]"),
-		                          *EventId.GetName(),
-		                          *ListenerLogString(Listener));
+		GES_LOG_WARNING(TEXT("Event[%s] - Listener to remove not found in [%s]"), *EventId.GetName(), *Listener.ToString());
 	}
 
 	// Check if event still has listeners, delete event if not
 	if (TargetEvent.Listeners.Num() == 0 && !TargetEvent.bPinned)
 	{
 		EventMap.Remove(EventId);
-		FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveListener) - No listeners remaining, event deleted"), *EventId.GetName());
+		GES_LOG_DISPLAY(TEXT("Event[%s] - No listeners remaining, event deleted"), *EventId.GetName());
 	}
 }
 
@@ -485,7 +466,7 @@ void FGameEventManager::RemoveListener(const FEventId& EventId, UObject* Receive
 {
 	if (!Receiver || FunctionName.IsEmpty())
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveListener) - Invalid receiver or function name"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Invalid receiver or function name"), *EventId.GetName());
 		return;
 	}
 
@@ -503,7 +484,7 @@ void FGameEventManager::RemoveAllListenersForReceiver(const FEventId& EventId, c
 {
 	if (!Receiver)
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveAllListenersForReceiver) - Receiver cannot be null"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Receiver cannot be null"), *EventId.GetName());
 		return;
 	}
 
@@ -511,7 +492,7 @@ void FGameEventManager::RemoveAllListenersForReceiver(const FEventId& EventId, c
 
 	if (!EventMap.Contains(EventId))
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveAllListenersForReceiver) - Event does not exist"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Event does not exist"), *EventId.GetName());
 		return;
 	}
 
@@ -523,16 +504,11 @@ void FGameEventManager::RemoveAllListenersForReceiver(const FEventId& EventId, c
 
 	if (RemovedCount > 0)
 	{
-		FLogger::Get().LogDisplay(TEXT("Event[%s] (RemoveAllListenersForReceiver) - Removed %d listeners for receiver[%s]"),
-		                          *EventId.GetName(),
-		                          RemovedCount,
-		                          *Receiver->GetName());
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Removed %d listeners for receiver[%s]"), *EventId.GetName(), RemovedCount, *Receiver->GetName());
 	}
 	else
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] (RemoveAllListenersForReceiver) - No listeners found for receiver[%s]"),
-		                          *EventId.GetName(),
-		                          *Receiver->GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - No listeners found for receiver[%s]"), *EventId.GetName(), *Receiver->GetName());
 	}
 }
 
@@ -540,7 +516,7 @@ void FGameEventManager::RemoveLambdaListener(const FEventId& EventId, const FStr
 {
 	if (LambdaListenerId.IsEmpty())
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] - Lambda listener ID cannot be empty"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Lambda listener ID cannot be empty"), *EventId.GetName());
 		return;
 	}
 
@@ -549,7 +525,7 @@ void FGameEventManager::RemoveLambdaListener(const FEventId& EventId, const FStr
 	FListenerContext* LambdaListener = LambdaListenerMap.Find(LambdaListenerId);
 	if (!LambdaListener)
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] - Lambda listener[%s] not found"), *EventId.GetName(), *LambdaListenerId);
+		GES_LOG_WARNING(TEXT("Event[%s] - Lambda listener [%s] not found"), *EventId.GetName(), *LambdaListenerId);
 		return;
 	}
 
@@ -560,7 +536,7 @@ void FGameEventManager::RemoveLambdaListener(const FEventId& EventId, const FStr
 	// Remove listener from event
 	RemoveListenerFromEvent(EventId, ListenerToRemove);
 
-	FLogger::Get().LogDisplay(TEXT("Event[%s] - Lambda listener[%s] removed successfully"), *EventId.GetName(), *LambdaListenerId);
+	GES_LOG_DISPLAY(TEXT("Event[%s] - Lambda listener [%s] removed successfully"), *EventId.GetName(), *LambdaListenerId);
 }
 #pragma endregion  "Listener"
 
@@ -586,13 +562,11 @@ bool FGameEventManager::SendEvent(const FEventContext& EventContext)
 	{
 		if (TargetEvent.bPinned && TargetEvent.HasValidParameters())
 		{
-			FLogger::Get().LogDisplay(TEXT("Event[%s] (SendEvent) - Pinned event saved with %d parameters, waiting for listener registration"),
-			                          *EventContext.EventId.GetName(),
-			                          TargetEvent.GetParameterCount());
+			GES_LOG_DISPLAY(TEXT("Event[%s] - Pinned event saved with %d parameters, waiting for listener registration"), *EventContext.EventId.GetName(), TargetEvent.GetParameterCount());
 		}
 		else
 		{
-			FLogger::Get().LogWarning(TEXT("Event[%s] (SendEvent) - Pinned No listeners registered"), *EventContext.EventId.GetName());
+			GES_LOG_WARNING(TEXT("Event[%s] - Pinned No listeners registered"), *EventContext.EventId.GetName());
 		}
 		return true;
 	}
@@ -613,7 +587,7 @@ bool FGameEventManager::SendEvent(const FEventContext& EventContext)
 		else
 		{
 			SendEventInternal(&Listener);
-			LogTriggerExecution(Listener, EventContext.EventId.GetName());
+			GES_LOG_DISPLAY(TEXT("Event[%s] -Triggered successfully -> %s"), *EventContext.EventId.GetName(), *Listener.ToString());
 		}
 	}
 
@@ -642,7 +616,7 @@ void FGameEventManager::SendEventInternal(const FListenerContext* Listener)
 	{
 		if (!ValidateFunctionParameters(Listener->Function, TArray<FPropertyContext>()))
 		{
-			FLogger::Get().LogWarning(TEXT("(SendEventInternal) - Function[%s] has invalid parameters"), *Listener->Function->GetName());
+			GES_LOG_WARNING(TEXT("Function[%s] has invalid parameters"), *Listener->Function->GetName());
 			return;
 		}
 		Listener->Receiver->ProcessEvent(Listener->Function, nullptr);
@@ -684,7 +658,7 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 	{
 		SendFunctionEvent(Listener, PropertyContexts);
 
-		LogTriggerExecution(*Listener, EventKey);
+		GES_LOG_DISPLAY(TEXT("Event[%s] -Triggered successfully -> %s"), *EventKey, *Listener->ToString());
 		return;
 	}
 
@@ -707,14 +681,14 @@ void FGameEventManager::SendPropertyEvent(const FListenerContext* Listener, cons
 
 		Listener->LambdaFunction(ParamProperty);
 
-		LogTriggerExecution(*Listener, EventKey);
+		GES_LOG_DISPLAY(TEXT("Event[%s] -Triggered successfully -> %s"), *EventKey, *Listener->ToString());
 		return;
 	}
 
 	if (Listener->PropertyDelegate.IsBound())
 	{
 		Listener->PropertyDelegate.Execute(PropertyContexts);
-		LogTriggerExecution(*Listener, EventKey);
+		GES_LOG_DISPLAY(TEXT("Event[%s] -Triggered successfully -> %s"), *EventKey, *Listener->ToString());
 	}
 }
 
@@ -840,7 +814,7 @@ void FGameEventManager::CopyMapProperty(const FMapProperty* MapProp, const void*
 	}
 	catch (...)
 	{
-		FLogger::Get().LogError(TEXT("Map property copy failed, using fallback method"));
+		GES_LOG_ERROR(TEXT("Map property copy failed, using fallback method"));
 
 		// Clean up and reinitialize
 		MapProp->DestroyValue(DestPtr);
@@ -964,16 +938,16 @@ void FGameEventManager::UnpinEvent(const FEventId& EventId)
 			}
 			TargetEvent.PropertyContexts.Empty();
 
-			FLogger::Get().LogDisplay(TEXT("Event[%s] - Unpinned"), *EventId.GetName());
+			GES_LOG_DISPLAY(TEXT("Event[%s] - Unpinned"), *EventId.GetName());
 		}
 		else
 		{
-			FLogger::Get().LogWarning(TEXT("Event[%s] - Event is already not pinned"), *EventId.GetName());
+			GES_LOG_WARNING(TEXT("Event[%s] - Event is already not pinned"), *EventId.GetName());
 		}
 	}
 	else
 	{
-		FLogger::Get().LogWarning(TEXT("Event[%s] - Event does not exist, cannot unpin"), *EventId.GetName());
+		GES_LOG_WARNING(TEXT("Event[%s] - Event does not exist, cannot unpin"), *EventId.GetName());
 	}
 }
 
@@ -1082,8 +1056,7 @@ int32 FGameEventManager::RemoveListenersForReceiverInternal(const UObject* Recei
 			if (Contexts->Num() == 0)
 			{
 				ReceiverMap.Remove(Receiver);
-				FLogger::Get().LogDisplay(TEXT("All listeners for receiver[%s] removed, cleaning from mapping table"),
-				                          *Receiver->GetName());
+				GES_LOG_DISPLAY(TEXT("All listeners for receiver [%s] removed, cleaning from mapping table"), *Receiver->GetName());
 			}
 		}
 	}
@@ -1102,14 +1075,14 @@ int32 FGameEventManager::RemoveListenersForReceiverInternal(const UObject* Recei
 			if (TargetEvent.Listeners.Num() == 0 && !TargetEvent.bPinned)
 			{
 				EventMap.Remove(EventId);
-				FLogger::Get().LogDisplay(TEXT("Event[%s] - No listeners remaining after receiver cleanup, event deleted"), *EventId.GetName());
+				GES_LOG_DISPLAY(TEXT("Event[%s] - No listeners remaining after receiver cleanup, event deleted"), *EventId.GetName());
 			}
 		}
 	}
 
 	if (InvalidRemovedCount > 0)
 	{
-		FLogger::Get().LogDisplay(TEXT("Cleaned %d invalid listeners during receiver cleanup"), InvalidRemovedCount);
+		GES_LOG_DISPLAY(TEXT("Cleaned %d invalid listeners during receiver cleanup"), InvalidRemovedCount);
 	}
 
 	return TotalRemovedCount;
@@ -1128,9 +1101,7 @@ void FGameEventManager::RemoveAllListenersForReceiver(const UObject* Receiver)
 
 	if (RemovedCount > 0)
 	{
-		FLogger::Get().LogDisplay(TEXT("RemoveAllListenersForReceiver - Removed %d listeners for receiver[%s]"),
-		                          RemovedCount,
-		                          *Receiver->GetName());
+		GES_LOG_DISPLAY(TEXT("RemoveAllListenersForReceiver - Removed %d listeners for receiver[%s]"), RemovedCount, *Receiver->GetName());
 	}
 }
 
@@ -1149,7 +1120,7 @@ void FGameEventManager::CreateEvent(const FEventId& EventId, const bool bPinned)
 
 	EventMap.Add(EventId, NewEvent);
 
-	FLogger::Get().LogDisplay(TEXT("Event[%s] - CreateEvent"), *EventLogString(NewEvent));
+	GES_LOG_DISPLAY(TEXT("Event[%s] - CreateEvent : %s"), *EventId.GetName(), NewEvent.bPinned ? TEXT("Pinned") : TEXT("Unpinned"));
 }
 
 void FGameEventManager::DeleteEvent(const FEventId& EventId)
@@ -1159,47 +1130,8 @@ void FGameEventManager::DeleteEvent(const FEventId& EventId)
 	if (EventMap.Contains(EventId))
 	{
 		EventMap.Remove(EventId);
-		FLogger::Get().LogDisplay(TEXT("Event[%s] - DeletedEvent"), *EventId.GetName());
+		GES_LOG_DISPLAY(TEXT("Event[%s] - DeletedEvent"), *EventId.GetName());
 	}
 }
 
 #pragma endregion
-
-#pragma region  "Log"
-FString FGameEventManager::ListenerLogString(const FListenerContext& Listener)
-{
-	if (!Listener.Receiver.IsValid())
-	{
-		return TEXT("Invalid Listener");
-	}
-
-	if (Listener.IsBoundToLambda())
-	{
-		return FString::Printf(TEXT("Lambda Callback"));
-	}
-	return FString::Printf(TEXT("%s::%s"), *Listener.Receiver->GetName(), *Listener.FunctionName);
-}
-
-FString FGameEventManager::EventLogString(const FEventContext& Event)
-{
-	const FString PinnedState = Event.bPinned ? TEXT("Pinned") : TEXT("Unpinned");
-	return FString::Printf(TEXT("%s: %s"), *Event.EventId.Key, *PinnedState);
-}
-
-void FGameEventManager::LogTriggerExecution(const FListenerContext& Listener, const FString& EventKey)
-{
-	const UObject* ListenerObject = Listener.Receiver.Get();
-	const FString ListenerName = ListenerObject ? ListenerObject->GetName() : TEXT("Unknown");
-	FString FunctionName = Listener.FunctionName;
-
-	if (Listener.IsBoundToDelegate())
-	{
-		FunctionName = Listener.PropertyDelegate.GetFunctionName().ToString();
-	}
-
-	FLogger::Get().LogDisplay(TEXT("Event[%s] - Triggered successfully -> %s.%s"),
-	                          *EventKey,
-	                          *ListenerName,
-	                          *FunctionName);
-}
-#pragma endregion  "Log"

@@ -348,13 +348,13 @@ private:
 	{
 		if (!Context.Property.Get() || !Context.PropertyPtr)
 		{
-			FLogger::Get().LogWarning(TEXT("ExtractParameterValue - Invalid property context"));
+			GES_LOG_WARNING(TEXT("ExtractParameterValue - Invalid property context"));
 			return T {};
 		}
 
 		if (!TPropertyMatcher<T>::DoesMatchProperty(Context.Property.Get()))
 		{
-			FLogger::Get().LogWarning(TEXT("ExtractParameterValue - Type mismatch: expected %s"), GetPropertyNameForType<T>());
+			GES_LOG_WARNING(TEXT("ExtractParameterValue - Type mismatch: expected %s"), GetPropertyNameForType<T>());
 			return T {};
 		}
 
@@ -798,7 +798,7 @@ auto FGameEventPropertyHelper::CreatePropertyWrapper(Lambda&& InLambda)
 
 		if (!Property.PropertyPtr)
 		{
-			FLogger::Get().LogWarning(TEXT("CreatePropertyWrapper - PropertyPtr is null"));
+			GES_LOG_WARNING(TEXT("CreatePropertyWrapper - PropertyPtr is null"));
 			return;
 		}
 
@@ -806,7 +806,7 @@ auto FGameEventPropertyHelper::CreatePropertyWrapper(Lambda&& InLambda)
 
 		if (!PropertyContexts || PropertyContexts->Num() != ParamCount)
 		{
-			FLogger::Get().LogWarning(TEXT("CreatePropertyWrapper - Parameter count mismatch: expected %zu, got %d"),
+			GES_LOG_WARNING(TEXT("CreatePropertyWrapper - Parameter count mismatch: expected %zu, got %d"),
 			                          ParamCount,
 			                          PropertyContexts ? PropertyContexts->Num() : 0);
 			return;

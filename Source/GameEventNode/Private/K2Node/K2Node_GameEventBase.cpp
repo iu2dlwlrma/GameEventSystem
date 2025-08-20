@@ -21,7 +21,7 @@ UK2Node_GameEventBase::UK2Node_GameEventBase()
 
 void UK2Node_GameEventBase::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PinDefaultValueChanged(Pin);
 
@@ -33,17 +33,17 @@ void UK2Node_GameEventBase::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 FText UK2Node_GameEventBase::GetMenuCategory() const
 {
-	return NSLOCTEXT("K2Node", "GameEventCategory", "GameEventSystem");
+	return NSLOCTEXT("GameEventNode", "GameEventCategory", "GameEventSystem");
 }
 
 FText UK2Node_GameEventBase::GetKeywords() const
 {
-	return NSLOCTEXT("K2Node", "GameEventBase_Keywords", "event game system");
+	return NSLOCTEXT("GameEventNode", "GameEventBase_Keywords", "event game system");
 }
 
 void UK2Node_GameEventBase::PostReconstructNode()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	Super::PostReconstructNode();
 
@@ -65,7 +65,7 @@ void UK2Node_GameEventBase::GetMenuActions(FBlueprintActionDatabaseRegistrar& Ac
 
 void UK2Node_GameEventBase::UpdatePinVisibility()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	UEdGraphPin* EventTagPin = GetEventTagPin();
 	UEdGraphPin* EventStringPin = GetEventStringPin();
@@ -78,14 +78,12 @@ void UK2Node_GameEventBase::UpdatePinVisibility()
 	if (UGameEventNodeUtils::IsStringEventId(GetEventIdTypePin()))
 	{
 		UGameEventNodeUtils::ClearPinValue(EventTagPin);
-		EventTagPin->bHidden = true;
 		EventStringPin->bHidden = false;
 	}
 	else
 	{
 		UGameEventNodeUtils::ClearPinValue(EventStringPin);
 		EventTagPin->bHidden = false;
-		EventStringPin->bHidden = true;
 	}
 
 	GetGraph()->NotifyNodeChanged(this);
@@ -98,7 +96,7 @@ FString UK2Node_GameEventBase::GetCurrentEventName() const
 
 void UK2Node_GameEventBase::CreateEventIdentifierPins()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
 
@@ -143,7 +141,7 @@ bool UK2Node_GameEventBase::CheckUpdatePinCondition(const UEdGraphPin* Pin) cons
 
 void UK2Node_GameEventBase::ConnectEventNameWithTagConversion(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, UEdGraphPin* EventNameParam)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BY_NAME(GetBlueprint()->GetName());
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	if (!EventNameParam)
 	{

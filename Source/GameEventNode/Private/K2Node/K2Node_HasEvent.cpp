@@ -18,32 +18,31 @@ void UK2Node_HasEvent::AllocateDefaultPins()
 	Super::AllocateDefaultPins();
 
 	UEdGraphPin* SelfPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), UEdGraphSchema_K2::PN_Self);
-	SelfPin->PinFriendlyName = NSLOCTEXT("K2Node", "HasEvent_Self", "Target");
-	SelfPin->PinToolTip = NSLOCTEXT("K2Node", "HasEvent_Self_Tooltip", "World context object").ToString();
+	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
+	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
 	// Create standard event identifier pins
 	CreateEventIdentifierPins();
 
 	// Return value pin
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FK2Node_HasEventPinName::ReturnValuePinName);
-	ReturnValuePin->PinFriendlyName = NSLOCTEXT("K2Node", "HasEvent_ReturnValue", "Event Exists");
-	ReturnValuePin->PinToolTip = NSLOCTEXT("K2Node", "HasEvent_ReturnValue_Tooltip", "Whether the event exists").ToString();
+	ReturnValuePin->PinFriendlyName = NSLOCTEXT("GameEventNode", "HasEvent_ReturnValue", "Event Exists");
+	ReturnValuePin->PinToolTip = NSLOCTEXT("GameEventNode", "HasEvent_ReturnValue_Tooltip", "Whether the event exists").ToString();
 }
 
 FText UK2Node_HasEvent::GetTooltipText() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "HasEvent_Tooltip", "Check if the specified event exists in the game event system. [{0}]"), FText::FromName(GetFName()));
+	return FText::Format(NSLOCTEXT("GameEventNode", "HasEvent_Tooltip", "Check if the specified event exists in the game event system. [{0}]"), FText::FromName(GetFName()));
 }
 
 FText UK2Node_HasEvent::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("K2Node", "HasEvent_Title", "Has Even");
+	return NSLOCTEXT("GameEventNode", "HasEvent_Title", "Has Even");
 }
 
 FText UK2Node_HasEvent::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("K2Node", "HasEvent_Keywords", "{0} has event hasevent check exist contains valid"),
-	                     Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "HasEvent_Keywords", "{0} has event hasevent check exist contains valid"),Super::GetKeywords());
 }
 
 void UK2Node_HasEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
@@ -57,7 +56,7 @@ void UK2Node_HasEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGr
 
 	if (!HasEventFunction)
 	{
-		CompilerContext.MessageLog.Error(*LOCTEXT("HasEventFunctionNotFound", "HasEvent function not found").ToString(), this);
+		CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode","HasEventFunctionNotFound", "HasEvent function not found").ToString(), this);
 		return;
 	}
 

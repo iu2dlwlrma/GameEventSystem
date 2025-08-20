@@ -24,7 +24,7 @@ FGameEventTypeManager* FGameEventTypeManager::Get()
 	if (!TypeManagerPtr.IsValid())
 	{
 		TypeManagerPtr = MakeShared<FGameEventTypeManager>();
-		FLogger::Get().Log(TEXT("GameEventTypeManager instance created successfully, hash: 0x%08X"), GetTypeHash(TypeManagerPtr));
+		GES_LOG_DISPLAY(TEXT("GameEventTypeManager instance created successfully, hash: 0x%08X"), GetTypeHash(TypeManagerPtr));
 	}
 	return TypeManagerPtr.Get();
 }
@@ -186,11 +186,11 @@ void FGameEventTypeManager::GetPinTypeFromProperty(FProperty* Property, FName& O
 	}
 }
 
-FEventTypeInfo FGameEventTypeManager::CreateTypeInfoFromProperty(FProperty* Property)
+void FGameEventTypeManager::AddTypeInfoFromProperty(FProperty* Property, FEventTypeInfo& OutTypeInfo)
 {
 	if (!Property)
 	{
-		return FEventTypeInfo();
+		return;
 	}
 
 	FName PinCategory;
@@ -201,9 +201,7 @@ FEventTypeInfo FGameEventTypeManager::CreateTypeInfoFromProperty(FProperty* Prop
 
 	GetPinTypeFromProperty(Property, PinCategory, PinSubCategory, SubCategoryObject, PinValueType, PinContainerType);
 
-	FEventTypeInfo TypeInfo(PinCategory, PinSubCategory, SubCategoryObject, PinValueType, PinContainerType);
-
-	return TypeInfo;
+	OutTypeInfo.Add(PinCategory, PinSubCategory, SubCategoryObject, PinValueType, PinContainerType);
 }
 
 bool FGameEventTypeManager::AnalyzeUFunctionParameters(const UFunction* Function, FEventTypeInfo& OutTypeInfo)
@@ -212,18 +210,17 @@ bool FGameEventTypeManager::AnalyzeUFunctionParameters(const UFunction* Function
 	{
 		return false;
 	}
+	OutTypeInfo = FEventTypeInfo();
 
 	for (TFieldIterator<FProperty> PropIt(Function); PropIt; ++PropIt)
 	{
 		FProperty* Property = *PropIt;
 		if (Property && !(Property->PropertyFlags & CPF_ReturnParm))
 		{
-			OutTypeInfo = CreateTypeInfoFromProperty(Property);
-			return true;
+			AddTypeInfoFromProperty(Property, OutTypeInfo);
 		}
 	}
 
-	OutTypeInfo = FEventTypeInfo();
 	return true;
 }
 
@@ -299,7 +296,7 @@ bool FGameEventTypeManager::AnalyzeAndRegisterFunctionType(const FString& EventN
 	if (TypeManager->AnalyzeFunctionSignature(Receiver, FunctionName, TypeInfo))
 	{
 		TypeManager->RegisterEventType(EventName, TypeInfo);
-		FLogger::Get().LogDisplay(TEXT("Event[%s] - Auto-registered function type [%s::%s] -> [%s]"),
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Auto-registered function type [%s::%s] -> [%s]"),
 		                          *EventName,
 		                          *Receiver->GetName(),
 		                          *FunctionName,
@@ -307,7 +304,7 @@ bool FGameEventTypeManager::AnalyzeAndRegisterFunctionType(const FString& EventN
 		return true;
 	}
 
-	FLogger::Get().LogWarning(TEXT("Event[%s] - Cannot analyze function signature [%s::%s]"),
+	GES_LOG_WARNING(TEXT("Event[%s] - Cannot analyze function signature [%s::%s]"),
 	                          *EventName,
 	                          *Receiver->GetName(),
 	                          *FunctionName);

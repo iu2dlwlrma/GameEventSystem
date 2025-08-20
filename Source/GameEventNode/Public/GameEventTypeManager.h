@@ -11,7 +11,7 @@ public:
 	static FGameEventTypeManager* Get();
 
 	static void GetPinTypeFromProperty(FProperty* Property, FName& OutPinCategory, FName& OutPinSubCategory, UObject*& OutSubCategoryObject, FEdGraphTerminalType& OutPinValueType, EPinContainerType& OutContainerType);
-	static FEventTypeInfo CreateTypeInfoFromProperty(FProperty* Property);
+	static void AddTypeInfoFromProperty(FProperty* Property, FEventTypeInfo& OutTypeInfo);
 	static bool AnalyzeUFunctionParameters(const UFunction* Function, FEventTypeInfo& OutTypeInfo);
 	static bool AnalyzeFunctionSignature(const UClass* ObjectClass, const FString& FunctionName, FEventTypeInfo& OutTypeInfo);
 
