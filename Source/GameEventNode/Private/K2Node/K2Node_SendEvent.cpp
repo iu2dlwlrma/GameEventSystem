@@ -22,7 +22,7 @@ const FName FK2Node_SendEventPinName::ParamDataName(TEXT("ParamData"));
 
 void UK2Node_SendEvent::AllocateDefaultPins()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::AllocateDefaultPins();
 
@@ -59,7 +59,7 @@ FText UK2Node_SendEvent::GetKeywords() const
 
 void UK2Node_SendEvent::PostReconstructNode()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::PostReconstructNode();
 
@@ -68,7 +68,7 @@ void UK2Node_SendEvent::PostReconstructNode()
 
 void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	// Call base class method to handle event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
@@ -83,7 +83,7 @@ void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	// Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
@@ -132,7 +132,7 @@ void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>&
 
 void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::ExpandNode(CompilerContext, SourceGraph);
 
@@ -307,7 +307,7 @@ void UK2Node_SendEvent::RefreshPinTypes()
 		return;
 	}
 
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const FString EventName = GetCurrentEventName();
 	FEventTypeInfo TypeInfo;

@@ -10,18 +10,30 @@ DECLARE_LOG_CATEGORY_EXTERN(LogGameEventNode, VeryVerbose, All);
 #define WITH_GEN_DEBUG_LOG 0
 #endif
 
-#if WITH_GEN_DEBUG_LOG && WITH_GEN_DEBUG_LOG
+#if WITH_GES_DEBUG_LOG && WITH_GEN_DEBUG_LOG
 #define UE_LOG_GAS_INFO(Format, ...) \
-    GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Log, Format, ##__VA_ARGS__)
+if (GetNodeDebugLogEnabled()) \
+{ \
+GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Log, Format, ##__VA_ARGS__) \
+}
 
 #define UE_LOG_GAS_EDITOR(Format, ...) \
-    GAME_EVENT_SYSTEM_LOG(LogGameEventNode, VeryVerbose, Format, ##__VA_ARGS__)
+if (GetNodeDebugLogEnabled()) \
+{ \
+GAME_EVENT_SYSTEM_LOG(LogGameEventNode, VeryVerbose, Format, ##__VA_ARGS__) \
+}
 
 #define UE_LOG_GAS_WARNING(Format, ...) \
-    GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Warning, Format, ##__VA_ARGS__)
+if (GetNodeDebugLogEnabled()) \
+{ \
+GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Warning, Format, ##__VA_ARGS__) \
+}
 
 #define UE_LOG_GAS_ERROR(Format, ...) \
-	GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Error, Format, ##__VA_ARGS__)
+if (GetNodeDebugLogEnabled()) \
+{ \
+GAME_EVENT_SYSTEM_LOG(LogGameEventNode, Error, Format, ##__VA_ARGS__) \
+}
 
 #else
 #define UE_LOG_GAS_INFO(Format, ...)

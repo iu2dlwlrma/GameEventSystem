@@ -33,7 +33,7 @@ const FName FK2Node_AddListenerPinName::DataTypePinName(TEXT("DataType"));
 
 void UK2Node_AddListener::AllocateDefaultPins()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::AllocateDefaultPins();
 
@@ -98,7 +98,7 @@ FText UK2Node_AddListener::GetKeywords() const
 
 void UK2Node_AddListener::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	//Super::ReallocatePinsDuringReconstruction(OldPins);
 	AllocateDefaultPins();
@@ -129,7 +129,7 @@ void UK2Node_AddListener::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*
 
 void UK2Node_AddListener::PostReconstructNode()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::PostReconstructNode();
 
@@ -138,7 +138,7 @@ void UK2Node_AddListener::PostReconstructNode()
 
 void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::ExpandNode(CompilerContext, SourceGraph);
 
@@ -214,7 +214,7 @@ void UK2Node_AddListener::ExpandNode(FKismetCompilerContext& CompilerContext, UE
 
 void UK2Node_AddListener::PinConnectionListChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::PinConnectionListChanged(Pin);
 
@@ -234,7 +234,7 @@ void UK2Node_AddListener::PinConnectionListChanged(UEdGraphPin* Pin)
 
 void UK2Node_AddListener::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	// Base class handles event identifier related logic
 	Super::PinDefaultValueChanged(Pin);
@@ -272,7 +272,7 @@ void UK2Node_AddListener::PinDefaultValueChanged(UEdGraphPin* Pin)
 
 void UK2Node_AddListener::PinTypeChanged(UEdGraphPin* Pin)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	Super::PinTypeChanged(Pin);
 
@@ -379,7 +379,7 @@ bool UK2Node_AddListener::CheckUpdatePinCondition(const UEdGraphPin* Pin) const
 
 void UK2Node_AddListener::UpdatePinVisibility()
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const bool bIsDelegate = UGameEventNodeUtils::IsDelegateMode(GetBindTypePin());
 	UEdGraphPin* FunctionNamePin = GetFunctionNamePin();
@@ -449,7 +449,7 @@ void UK2Node_AddListener::UpdateEventSignature() const
 
 bool UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const FString EventName = GetCurrentEventName();
 	if (EventName.IsEmpty())
@@ -530,7 +530,7 @@ void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
 		return;
 	}
 
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	if (GEditor && UGameEventNodeUtils::IsDelegateMode(GetBindTypePin()))
 	{
@@ -615,7 +615,7 @@ void UK2Node_AddListener::UpdateCustomEventSignatureFromDataType() const
 
 void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* CallFuncNode, FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	if (!CallFuncNode || !SourceGraph)
 	{
@@ -665,7 +665,7 @@ void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* Ca
 
 void UK2Node_AddListener::CreateDataConversionNodes(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph, const UK2Node_CustomEvent* WrapperEventNode)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const UEdGraphPin* DelegatePin = GetDelegatePin();
 	UEdGraphPin* LinkedPin = DelegatePin->LinkedTo[0];
@@ -747,7 +747,7 @@ void UK2Node_AddListener::CreateDataConversionNodes(FKismetCompilerContext& Comp
 
 void UK2Node_AddListener::AddDataTypePinAtIndex(const int32 Index)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const int32 CurrentCount = GetDataTypePinCount();
 	const int32 TargetIndex = Index < 0 ? CurrentCount : FMath::Clamp(Index, 0, CurrentCount);
@@ -762,7 +762,7 @@ void UK2Node_AddListener::AddDataTypePinAtIndex(const int32 Index)
 
 void UK2Node_AddListener::RemoveDataTypePinAtIndex(const int32 Index)
 {
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 	TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
 	if (DataTypePins.Num() > 0 && Index < DataTypePins.Num())
 	{

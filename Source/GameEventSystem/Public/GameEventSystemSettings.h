@@ -24,11 +24,9 @@ public:
 
 	static const UGameEventSystemSettings* Get();
 
-	UPROPERTY(Config,
-		EditAnywhere,
-		BlueprintReadOnly,
-		Category = "Debug",
-		meta = (DisplayName = "Enable Debug Mode",
-			ToolTip = "Enable additional debugging features and validation"))
-	bool bEnableDebugMode;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Enable Debug Log", ToolTip = "Enable debugging log"))
+	bool bEnableDebug;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (DisplayName = "Enable Node Debug Log", ToolTip = "Enable blueprint node debugging log"))
+	bool bEnableNodeDebug;
 };

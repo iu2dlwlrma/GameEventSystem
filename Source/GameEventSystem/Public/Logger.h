@@ -11,6 +11,14 @@ GAMEEVENTSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogGameEventSystem, VeryVerbose,
 #endif
 
 #if WITH_GES_DEBUG_LOG
+GAMEEVENTSYSTEM_API bool GetDebugLogEnabled();
+GAMEEVENTSYSTEM_API void SetDebugLogEnabled(const bool bEnabled);
+
+GAMEEVENTSYSTEM_API bool GetNodeDebugLogEnabled();
+GAMEEVENTSYSTEM_API void SetNodeDebugLogEnabled(const bool bEnabled);
+#endif
+
+#if WITH_GES_DEBUG_LOG
 struct GAMEEVENTSYSTEM_API FScopedCallTracker
 {
 	explicit FScopedCallTracker(FString InScopeName, const ELogVerbosity::Type InVerbosity = ELogVerbosity::Log);
@@ -35,16 +43,22 @@ private:
 	FScopedCallTracker _ScopedCallTrackerDummy(ANSI_TO_TCHAR(__FUNCTION__))
 
 #define GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME() \
-	FScopedCallTracker _ScopedCallTrackerDummy(FString::Printf(TEXT("[%s][%s] %hs"), *GetBlueprint()->GetName(), *GetNameSafe(this), __FUNCTION__), ELogVerbosity::VeryVerbose)
+if (GetNodeDebugLogEnabled()) \
+{ \
+FScopedCallTracker _ScopedCallTrackerDummy(FString::Printf(TEXT("[%s][%s] %hs"), *GetBlueprint()->GetName(), *GetNameSafe(this), __FUNCTION__), ELogVerbosity::VeryVerbose); \
+}
 #else
 #define GAME_SCOPED_TRACK_LOG(ScopeName)
-#define GAME_SCOPED_TRACK_LOG_AUTO(ScopeName)
-#define GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME(ScopeName)
+#define GAME_SCOPED_TRACK_LOG_AUTO()
+#define GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 #endif
 
 #if WITH_GES_DEBUG_LOG
 #define GAME_EVENT_SYSTEM_LOG(LogCategory, Verbosity, Format, ...) \
-UE_LOG(LogCategory, Verbosity, TEXT("[%s] ") Format, ANSI_TO_TCHAR(__FUNCTION__), ##__VA_ARGS__)
+if (GetDebugLogEnabled()) \
+{ \
+	UE_LOG(LogCategory, Verbosity, TEXT("[%s] ") Format, ANSI_TO_TCHAR(__FUNCTION__), ##__VA_ARGS__); \
+}
 
 #define GES_LOG(Format, ...) \
 GAME_EVENT_SYSTEM_LOG(LogGameEventSystem, Log, Format, ##__VA_ARGS__)
@@ -67,4 +81,5 @@ GAME_EVENT_SYSTEM_LOG(LogGameEventSystem, VeryVerbose, Format, ##__VA_ARGS__)
 #define GES_LOG_DISPLAY(Format, ...) 
 #define GES_LOG_WARNING(Format, ...) 
 #define GES_LOG_ERROR(Format, ...) 
+#define GES_LOG_VERY_VERBOSE(Format, ...) 
 #endif

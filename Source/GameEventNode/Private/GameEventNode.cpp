@@ -21,7 +21,6 @@ public:
 		else
 		{
 			UE_LOG_GAS_ERROR(TEXT("Failed to create GameEventNodeGraphNodeFactory"));
-			return;
 		}
 
 		UE_LOG_GAS_INFO(TEXT("GameEventNode module startup completed"));

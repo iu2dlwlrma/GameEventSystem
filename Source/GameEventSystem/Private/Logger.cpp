@@ -1,5 +1,33 @@
 #include "Logger.h"
+
 DEFINE_LOG_CATEGORY(LogGameEventSystem);
+
+#if WITH_GES_DEBUG_LOG
+static std::atomic<bool> GES_DebugEnabled(true);
+
+bool GetDebugLogEnabled()
+{
+	return GES_DebugEnabled.load();
+}
+
+void SetDebugLogEnabled(const bool bEnabled)
+{
+	GES_DebugEnabled.store(bEnabled);
+}
+
+static std::atomic<bool> GEN_DebugEnabled(false);
+
+bool GetNodeDebugLogEnabled()
+{
+	return GEN_DebugEnabled.load();
+}
+
+void SetNodeDebugLogEnabled(const bool bEnabled)
+{
+	GEN_DebugEnabled.store(bEnabled);
+}
+
+#endif
 
 #if WITH_GES_DEBUG_LOG
 DEFINE_LOG_CATEGORY_STATIC(LogScopedCallTrack, All, All)
@@ -14,7 +42,7 @@ FScopedCallTracker::FScopedCallTracker(FString InScopeName, const ELogVerbosity:
 	RecordedStartTime = FPlatformTime::Seconds();
 	Verbosity = InVerbosity;
 
-	if (bIsOn)
+	if (bIsOn && GetDebugLogEnabled())
 	{
 		FMsg::Logf(__FILE__,__LINE__, LogScopedCallTrack.GetCategoryName(), Verbosity,TEXT("%s Begin"), *ScopeName);
 	}
@@ -28,7 +56,7 @@ FScopedCallTracker::FScopedCallTracker(const ANSICHAR* InScopeName, const ELogVe
 
 FScopedCallTracker::~FScopedCallTracker()
 {
-	if (bIsOn)
+	if (bIsOn && GetDebugLogEnabled())
 	{
 		const double TimeTaken = FPlatformTime::Seconds() - RecordedStartTime;
 

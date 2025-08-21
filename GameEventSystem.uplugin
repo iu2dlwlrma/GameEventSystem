@@ -24,11 +24,6 @@
       "Name": "GameEventNode",
       "Type": "UncookedOnly",
       "LoadingPhase": "Default"
-    },
-    {
-      "Name": "GameEventSystemTest",
-      "Type": "Editor",
-      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

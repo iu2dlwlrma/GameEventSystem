@@ -1,6 +1,8 @@
 #include "GameEventSystemSettings.h"
+#include "Logger.h"
 
-UGameEventSystemSettings::UGameEventSystemSettings(): bEnableDebugMode(false)
+UGameEventSystemSettings::UGameEventSystemSettings() : bEnableDebug(true),
+                                                       bEnableNodeDebug(false)
 {
 }
 
@@ -30,6 +32,10 @@ bool UGameEventSystemSettings::CanEditChange(const FProperty* InProperty) const
 void UGameEventSystemSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+#if WITH_GES_DEBUG_LOG
+	SetDebugLogEnabled(bEnableDebug);
+	SetNodeDebugLogEnabled(bEnableNodeDebug);
+#endif
 }
 #endif
 

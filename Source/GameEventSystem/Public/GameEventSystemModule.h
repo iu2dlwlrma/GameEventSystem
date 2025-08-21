@@ -12,8 +12,5 @@ public:
 private:
 #if WITH_EDITOR
 	FDelegateHandle BeginPieDelegate;
-
-	void RegisterSettings();
-	void UnregisterSettings();
 #endif
 };

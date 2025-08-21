@@ -5,13 +5,20 @@
 
 #if WITH_EDITOR
 #include "Editor.h"
-#include "ISettingsModule.h"
 #endif
 
 #define LOCTEXT_NAMESPACE "FGameEventSystemModule"
 
 void FGameEventSystemModule::StartupModule()
 {
+#if WITH_GES_DEBUG_LOG
+	if (const UGameEventSystemSettings* Settings = UGameEventSystemSettings::Get())
+	{
+		SetDebugLogEnabled(Settings->bEnableDebug);
+		SetNodeDebugLogEnabled(Settings->bEnableNodeDebug);
+	}
+#endif
+
 	GES_LOG_DISPLAY(TEXT("GameEventSystem module is starting..."));
 
 	const TSharedPtr<FGameEventManager> EventManager = FGameEventManager::Get();
@@ -25,8 +32,6 @@ void FGameEventSystemModule::StartupModule()
 	}
 
 #if WITH_EDITOR
-	RegisterSettings();
-
 	BeginPieDelegate = FEditorDelegates::BeginPIE.AddLambda([](bool bIsSimulating)
 	{
 		GES_LOG_VERY_VERBOSE(TEXT("PIE startup detected, cleaning up..."));
@@ -61,8 +66,6 @@ void FGameEventSystemModule::ShutdownModule()
 	}
 
 #if WITH_EDITOR
-	UnregisterSettings();
-
 	if (BeginPieDelegate.IsValid())
 	{
 		FEditorDelegates::BeginPIE.Remove(BeginPieDelegate);
@@ -72,38 +75,6 @@ void FGameEventSystemModule::ShutdownModule()
 
 	GES_LOG_VERY_VERBOSE(TEXT("GameEventSystem module shutdown completed"));
 }
-
-#if WITH_EDITOR
-void FGameEventSystemModule::RegisterSettings()
-{
-	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
-	{
-		SettingsModule->RegisterSettings("Project",
-		                                 "Plugins",
-		                                 "GameEventSystem",
-		                                 NSLOCTEXT("GameEventNode", "RuntimeSettingsName", "Game Event System"),
-		                                 NSLOCTEXT("GameEventNode", "RuntimeSettingsDescription", "Configure Game Event System plugin settings"),
-		                                 GetMutableDefault<UGameEventSystemSettings>()
-		                                );
-
-		GES_LOG_VERY_VERBOSE(TEXT("GameEventSystem settings page registered"));
-	}
-	else
-	{
-		GES_LOG_WARNING(TEXT("Failed to register GameEventSystem settings: Settings module not available"));
-	}
-}
-
-void FGameEventSystemModule::UnregisterSettings()
-{
-	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
-	{
-		SettingsModule->UnregisterSettings("Project", "Plugins", "GameEventSystem");
-
-		GES_LOG_VERY_VERBOSE(TEXT("GameEventSystem settings page unregistered"));
-	}
-}
-#endif
 
 #undef LOCTEXT_NAMESPACE
 
