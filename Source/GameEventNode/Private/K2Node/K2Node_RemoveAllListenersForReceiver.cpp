@@ -32,7 +32,7 @@ FText UK2Node_RemoveAllListenersForReceiver::GetNodeTitle(ENodeTitleType::Type T
 
 FText UK2Node_RemoveAllListenersForReceiver::GetKeywords() const
 {
-	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveAllListeners_Keywords", "{0} remove all listeners receiver cleanup clear unbind unsubscribe event game system"), Super::GetKeywords());
+	return FText::Format(NSLOCTEXT("GameEventNode", "RemoveAllListeners_Keywords", "{0} remove all listeners receiver cleanup clear unbind unsubscribe event game system gameevent game event"), Super::GetKeywords());
 }
 
 FText UK2Node_RemoveAllListenersForReceiver::GetMenuCategory() const

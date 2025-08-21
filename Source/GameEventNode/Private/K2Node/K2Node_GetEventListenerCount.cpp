@@ -20,8 +20,6 @@ void UK2Node_GetEventListenerCount::AllocateDefaultPins()
 	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
 	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
-	CreateEventIdentifierPins();
-
 	if (UEdGraphPin* EventIdTypePin = GetEventIdTypePin())
 	{
 		EventIdTypePin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_EventIdType_Tooltip", "Event ID type: String or GameplayTag").ToString();
@@ -38,6 +36,8 @@ void UK2Node_GetEventListenerCount::AllocateDefaultPins()
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Int, FK2Node_GetEventListenerCountPinName::ReturnValuePinName);
 	ReturnValuePin->PinFriendlyName = NSLOCTEXT("GameEventNode", "GetEventListenerCount_ReturnValue", "Listener Count");
 	ReturnValuePin->PinToolTip = NSLOCTEXT("GameEventNode", "GetEventListenerCount_ReturnValue_Tooltip", "Number of listeners for this event").ToString();
+
+	CreateEventIdentifierPins();
 }
 
 FText UK2Node_GetEventListenerCount::GetTooltipText() const

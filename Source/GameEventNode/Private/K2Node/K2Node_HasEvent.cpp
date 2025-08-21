@@ -21,13 +21,12 @@ void UK2Node_HasEvent::AllocateDefaultPins()
 	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
 	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
-	// Create standard event identifier pins
-	CreateEventIdentifierPins();
-
 	// Return value pin
 	UEdGraphPin* ReturnValuePin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FK2Node_HasEventPinName::ReturnValuePinName);
 	ReturnValuePin->PinFriendlyName = NSLOCTEXT("GameEventNode", "HasEvent_ReturnValue", "Event Exists");
 	ReturnValuePin->PinToolTip = NSLOCTEXT("GameEventNode", "HasEvent_ReturnValue_Tooltip", "Whether the event exists").ToString();
+
+	CreateEventIdentifierPins();
 }
 
 FText UK2Node_HasEvent::GetTooltipText() const
@@ -37,7 +36,7 @@ FText UK2Node_HasEvent::GetTooltipText() const
 
 FText UK2Node_HasEvent::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
-	return NSLOCTEXT("GameEventNode", "HasEvent_Title", "Has Even");
+	return NSLOCTEXT("GameEventNode", "HasEvent_Title", "Has Event");
 }
 
 FText UK2Node_HasEvent::GetKeywords() const

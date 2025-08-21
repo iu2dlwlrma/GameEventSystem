@@ -31,7 +31,7 @@ protected:
 
 	virtual FString GetCurrentEventName() const;
 
-	virtual void CreateEventIdentifierPins();
+	virtual void CreateEventIdentifierPins(const int32 Difference = 0);
 
 	virtual UEdGraphPin* GetEventIdTypePin() const;
 	virtual UEdGraphPin* GetEventTagPin() const;

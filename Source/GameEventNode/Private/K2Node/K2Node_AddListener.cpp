@@ -46,9 +46,6 @@ void UK2Node_AddListener::AllocateDefaultPins()
 	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
 	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
-	// Create standard event identifier pins
-	CreateEventIdentifierPins();
-
 	// Set AddListener specific tooltips
 	if (UEdGraphPin* EventIdTypePin = GetEventIdTypePin())
 	{
@@ -78,6 +75,9 @@ void UK2Node_AddListener::AllocateDefaultPins()
 	// Create delegate pin
 	UEdGraphPin* DelegatePin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Delegate, FK2Node_AddListenerPinName::DelegatePinName);
 	DelegatePin->PinToolTip = NSLOCTEXT("GameEventNode", "Delegate_Tooltip", "Delegate to bind").ToString();
+
+	// Create standard event identifier pins, Need to be done before EventBindTypePin, therefore Difference = 3
+	CreateEventIdentifierPins(3);
 }
 
 FText UK2Node_AddListener::GetTooltipText() const

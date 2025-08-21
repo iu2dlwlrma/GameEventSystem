@@ -35,11 +35,10 @@ void UK2Node_SendEvent::AllocateDefaultPins()
 	SelfPin->PinFriendlyName = NSLOCTEXT("GameEventNode", "Target", "Target");
 	SelfPin->PinToolTip = NSLOCTEXT("GameEventNode", "Target_Tooltip", "Target object for listening").ToString();
 
-	// Create standard event identifier pins
-	CreateEventIdentifierPins();
-
 	// Pinned Pin
 	CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Boolean, FK2Node_SendEventPinName::PinnedName);
+
+	CreateEventIdentifierPins(1);
 }
 
 FText UK2Node_SendEvent::GetTooltipText() const
