@@ -411,13 +411,6 @@ void UK2Node_AddListener::UpdatePinVisibility()
 
 void UK2Node_AddListener::UpdateEventSignature() const
 {
-	const FString EventName = GetCurrentEventName();
-	if (EventName.IsEmpty())
-	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
-		return;
-	}
-
 	if (UGameEventNodeUtils::IsDelegateMode(GetBindTypePin()))
 	{
 		TArray<UEdGraphPin*> DataTypePins = GetAllDataTypePins();
@@ -436,9 +429,17 @@ void UK2Node_AddListener::UpdateEventSignature() const
 				TypeInfo = FEventTypeInfo(Parameters);
 			}
 		}
-
-		FGameEventTypeManager::Get()->RegisterEventType(EventName, TypeInfo);
-
+		
+		const FString EventName = GetCurrentEventName();
+		if (!EventName.IsEmpty())
+		{
+			FGameEventTypeManager::Get()->RegisterEventType(EventName, TypeInfo);
+		}
+		else
+		{
+			UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+		}
+		
 		UpdateCustomEventSignatureFromDataType();
 
 		return;
