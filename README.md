@@ -6,12 +6,12 @@ A high-performance, type-safe UE5 event system plugin supporting both Blueprint 
 
 ## Features
 
-- 🚀 **High Performance**: Optimized event dispatching, supports large-scale event processing
-- 🧵 **Thread Safe**: Safe operations in multi-threaded environments
-- 📘 **Blueprint Friendly**: Full Blueprint node support
+- 📘 **Blueprint Friendly**: Full Blueprint node support （
 - 📌 **Event Pinning**: Supports event state persistence, allowing late listeners to immediately receive pinned events
 - 🏷️ **No Type Limitations**: Supports any data type
-- 🔧 **Parameter Type Deduction**: Automatically deduces event parameter types, supports any number of parameters (C++ only)
+- 🔧 **Multi parameter support**: C++ supports any number of parameters, with a maximum of 8 blueprints
+- 🧵 **Thread Safe**: Safe operations in multi-threaded environments
+- 🚀 **High Performance**: supports large-scale event processing
 
 ## Installation Guide
 
