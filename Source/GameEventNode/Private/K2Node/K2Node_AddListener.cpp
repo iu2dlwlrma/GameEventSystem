@@ -726,11 +726,12 @@ void UK2Node_AddListener::CreateDataConversionNodes(FKismetCompilerContext& Comp
 					ArrayItemPin->MakeLinkTo(ConvertFunctionInPropPin);
 
 					FString ParamName = i == 0 ? TEXT("Value") : FString::Printf(TEXT("Value%d"), i);
-					UEdGraphPin* DelegateFunctionValuePin = DelegateFunctionNode->FindPinChecked(ParamName);
-
-					UEdGraphPin* ConvertFunctionOutValuePin = ConvertFunctionNode->FindPinChecked(TEXT("OutValue"));
-					ConvertFunctionOutValuePin->PinType = DelegateFunctionValuePin->PinType;
-					ConvertFunctionOutValuePin->MakeLinkTo(DelegateFunctionValuePin);
+					if (UEdGraphPin* DelegateFunctionValuePin = DelegateFunctionNode->FindPin(ParamName))
+					{
+						UEdGraphPin* ConvertFunctionOutValuePin = ConvertFunctionNode->FindPinChecked(TEXT("OutValue"));
+						ConvertFunctionOutValuePin->PinType = DelegateFunctionValuePin->PinType;
+						ConvertFunctionOutValuePin->MakeLinkTo(DelegateFunctionValuePin);
+					}
 				}
 			}
 		}
