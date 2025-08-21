@@ -18,10 +18,11 @@ public:
 	virtual void PinDefaultValueChanged(UEdGraphPin* Pin) override;
 	virtual void ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins) override;
 	virtual void ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph) override;
-
+	virtual void DestroyNode() override;
+	
 protected:
 	void RefreshPinTypes();
-
+	
 private:
 	UEdGraphPin* CreateParamDataPinAtIndex(const int32 Index, const FName PinCategory);
 	TArray<UEdGraphPin*> GetAllParamDataPins() const;
@@ -32,4 +33,6 @@ private:
 	UEdGraphPin* GetPinnedPin() const;
 	UEdGraphPin* GetParamDataPin() const;
 #pragma endregion
+
+	uint8 bIsBindSuccess:1;
 };

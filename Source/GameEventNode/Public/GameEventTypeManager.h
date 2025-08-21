@@ -24,8 +24,13 @@ public:
 
 	bool AnalyzeAndRegisterFunctionType(const FString& EventName, const UClass* Receiver, const FString& FunctionName);
 
+	bool BindEventTypeNotify(const FString& EventName, const int32 UniqueID, const TFunction<void()>& Function);
+	void UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID);
+	void StartEventTypeNotify(const FString& EventName);
+
 protected:
 	FEventTypeRegistry TypeRegistry;
+	TMap<FString, TMap<int32, TFunction<void()>>> EventTypeNotifyGroup;
 
 private:
 	static TSharedPtr<FGameEventTypeManager> TypeManagerPtr;

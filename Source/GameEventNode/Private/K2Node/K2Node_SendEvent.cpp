@@ -299,6 +299,17 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 	BreakAllNodeLinks();
 }
 
+void UK2Node_SendEvent::DestroyNode()
+{
+	Super::DestroyNode();
+
+	const FString EventName = GetCurrentEventName();
+	if (!EventName.IsEmpty() && bIsBindSuccess)
+	{
+		FGameEventTypeManager::Get()->UnBindEventTypeNotify(EventName, GetUniqueID());
+	}
+}
+
 void UK2Node_SendEvent::RefreshPinTypes()
 {
 	if (UE::GetIsEditorLoadingPackage() || !GIsEditor || IsTemplate() || HasAnyFlags(RF_ClassDefaultObject))
@@ -309,6 +320,16 @@ void UK2Node_SendEvent::RefreshPinTypes()
 	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
 
 	const FString EventName = GetCurrentEventName();
+	if (!EventName.IsEmpty() && !bIsBindSuccess)
+	{
+		bIsBindSuccess = FGameEventTypeManager::Get()->BindEventTypeNotify(EventName, GetUniqueID(), [this]
+		{
+			if (IsValid(this))
+			{
+				RefreshPinTypes();
+			}
+		});
+	}
 	FEventTypeInfo TypeInfo;
 	const bool bHasTypeInfo = FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
 	const bool bIsNoParams = EventName.IsEmpty() || !TypeInfo.IsValid();

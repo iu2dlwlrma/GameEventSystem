@@ -82,7 +82,7 @@ void FGameEventTypeManager::GetPinTypeFromProperty(FProperty* Property, FName& O
 		OutPinSubCategory = NAME_None;
 		OutSubCategoryObject = nullptr;
 	}
-	else if (const FByteProperty* ByteProperty = CastField<FByteProperty>(Property))
+	else if (Property->IsA<FByteProperty>())
 	{
 		OutPinCategory = UEdGraphSchema_K2::PC_Byte;
 		OutPinSubCategory = NAME_None;
@@ -247,8 +247,8 @@ void FGameEventTypeManager::RegisterEventType(const FString& EventName, const FE
 	{
 		return;
 	}
-
 	TypeRegistry.RegisterEventType(EventName, TypeInfo);
+	StartEventTypeNotify(EventName);
 }
 
 bool FGameEventTypeManager::GetEventTypeInfo(const FString& EventName, FEventTypeInfo& OutTypeInfo) const
@@ -309,4 +309,48 @@ bool FGameEventTypeManager::AnalyzeAndRegisterFunctionType(const FString& EventN
 	                          *Receiver->GetName(),
 	                          *FunctionName);
 	return false;
+}
+
+bool FGameEventTypeManager::BindEventTypeNotify(const FString& EventName, const int32 UniqueID, const TFunction<void()>& Function)
+{
+	if (EventName.IsEmpty() || !Function)
+	{
+		return false;
+	}
+	TMap<int32, TFunction<void()>>& NotifyGroup = EventTypeNotifyGroup.FindOrAdd(EventName);
+	if (NotifyGroup.Contains(UniqueID))
+	{
+		return true;
+	}
+	NotifyGroup.Add(UniqueID, Function);
+	return true;
+}
+
+void FGameEventTypeManager::UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID)
+{
+	if (EventName.IsEmpty())
+	{
+		return ;
+	}
+	TMap<int32, TFunction<void()>>* NotifyGroup = EventTypeNotifyGroup.Find(EventName);
+	if (NotifyGroup->Contains(UniqueID))
+	{
+		NotifyGroup->Remove(UniqueID);
+	}
+}
+
+void FGameEventTypeManager::StartEventTypeNotify(const FString& EventName)
+{
+	if (const TMap<int32, TFunction<void()>>* NotifyGroup = EventTypeNotifyGroup.Find(EventName))
+	{
+		// The auto keyword will deduce the type of each element in the TMap as a TPair
+		// In this case, the type is TPair<const int32, TFunction<void()>>
+		for (const auto& Pair : *NotifyGroup)
+		{
+			if(const TFunction<void()>& Function = Pair.Value)
+			{
+				Function();
+			}
+		}
+	}
 }
