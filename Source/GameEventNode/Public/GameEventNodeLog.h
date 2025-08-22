@@ -1,6 +1,5 @@
 #pragma once
-
-#include "CoreMinimal.h"
+#include "Logger.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGameEventNode, VeryVerbose, All);
 

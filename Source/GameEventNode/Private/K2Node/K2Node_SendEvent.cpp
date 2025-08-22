@@ -1,4 +1,6 @@
 #include "K2Node/K2Node_SendEvent.h"
+
+#include "GameEventNodeLog.h"
 #include "KismetCompiler.h"
 #include "GameEventNodeTypes.h"
 #include "GameEventNodeUtils.h"
@@ -63,6 +65,45 @@ void UK2Node_SendEvent::PostReconstructNode()
 	Super::PostReconstructNode();
 
 	RefreshPinTypes();
+
+	const FString EventName = GetCurrentEventName();
+	if (!EventName.IsEmpty() && !bIsBindSuccess)
+	{
+		bIsBindSuccess = FGameEventTypeManager::Get()->BindEventTypeNotify(EventName,
+		                                                                   GetUniqueID(),
+		                                                                   [this]
+		                                                                   {
+			                                                                   if (IsValid(this))
+			                                                                   {
+				                                                                   RefreshPinTypes();
+			                                                                   }
+		                                                                   });
+	}
+
+	const FString PrefixStr = FK2Node_SendEventPinName::ParamDataName.ToString();
+
+	for (int32 Index = Pins.Num() - 1; Index >= 0; --Index)
+	{
+		if (const UEdGraphPin* Pin = Pins[Index])
+		{
+			if (!Pin->GetOwningNodeUnchecked())
+			{
+				Pins.RemoveAt(Index);
+				continue;
+			}
+			const FString PinNameStr = Pin->PinName.ToString();
+			if (PinNameStr.StartsWith(PrefixStr) && PinNameStr.Len() > PrefixStr.Len())
+			{
+				const FString NumberPart = PinNameStr.Mid(PrefixStr.Len());
+				int32 IndexNumber;
+				LexTryParseString<int32>(IndexNumber, *NumberPart);
+				if (IndexNumber >= GlobalConfig.MaxParameterNum)
+				{
+					Pins.RemoveAt(Index);
+				}
+			}
+		}
+	}
 }
 
 void UK2Node_SendEvent::PinDefaultValueChanged(UEdGraphPin* Pin)
@@ -122,7 +163,7 @@ void UK2Node_SendEvent::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>&
 			NewPin->DefaultObject = OldPin->DefaultObject;
 			NewPin->DefaultTextValue = OldPin->DefaultTextValue;
 			NewPin->DefaultValue = OldPin->DefaultValue;
-			NewPin->bDefaultValueIsIgnored = NewPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object || NewPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct;
+			NewPin->bDefaultValueIsIgnored = NewPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object;
 		}
 	}
 
@@ -174,8 +215,23 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 		const bool bValid = ParamDataPin != nullptr || !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject || !ParamDataPin->DefaultTextValue.IsEmpty();
 		if (!bValid)
 		{
-			CompilerContext.MessageLog.Error(*NSLOCTEXT("GameEventNode", "ParamDataValid", "Invalid parameters! @@").ToString(), this);
+			const FText MessageLog = FText::Format(NSLOCTEXT("GameEventNode", "ParamDataValid", "Parameter '{0}' Invalid parameters! @@"), FText::FromString(ParamDataPin->PinName.ToString()));
+			CompilerContext.MessageLog.Error(*MessageLog.ToString(), this);
 			return;
+		}
+		const bool bHasConnection = ParamDataPin->LinkedTo.Num() > 0;
+		const bool bHasDefaultValue = !ParamDataPin->DefaultValue.IsEmpty() || ParamDataPin->DefaultObject != nullptr || !ParamDataPin->DefaultTextValue.IsEmpty();
+
+		// The pin is valid if it's connected OR if it has a valid default value.
+		if (!bHasConnection && !bHasDefaultValue)
+		{
+			// Special case: Booleans can have a default value of "false" which is an empty string. We assume they are always valid if unconnected.
+			if (ParamDataPin->PinType.PinCategory != UEdGraphSchema_K2::PC_Boolean)
+			{
+				const FText MessageLog = FText::Format(NSLOCTEXT("GameEventNode", "ParamDataValid", "Parameter '{0}' is not connected and has no default value! @@"), FText::FromString(ParamDataPin->PinName.ToString()));
+				CompilerContext.MessageLog.Error(*MessageLog.ToString(), this);
+				return;
+			}
 		}
 	}
 
@@ -246,6 +302,9 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 					const FName ParamDataParamName = i == 0 ? FName(TEXT("ParamData")) : FName(*FString::Printf(TEXT("ParamData%d"), i));
 					UEdGraphPin* ParamDataParam = CallFuncNode->FindPinChecked(ParamDataParamName);
 					ParamDataParam->PinType = ParamDataPin->PinType;
+
+					UE_LOG_GAS_EDITOR(TEXT("PinCategory '%s'  -- PinSubCategoryObject '%s'"), *ParamDataPin->PinType.PinCategory.ToString(), *GetNameSafe(ParamDataPin->PinType.PinSubCategoryObject.Get()));
+
 					// Handle connected pins, unconnected pins need to be linked, otherwise reflection won't get them and cause crashes
 					if (ParamDataPin->LinkedTo.Num() == 0)
 					{
@@ -259,11 +318,11 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 								EnumLiteralNode->Enum = CastChecked<UEnum>(ParamDataPin->PinType.PinSubCategoryObject.Get());
 								EnumLiteralNode->AllocateDefaultPins();
 
-								UEdGraphPin* EnumBytePin = EnumLiteralNode->FindPinChecked(FName("Enum"));
-								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *EnumBytePin);
+								UEdGraphPin* EnumInputPin = EnumLiteralNode->FindPinChecked(UK2Node_EnumLiteral::GetEnumInputPinName());
+								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *EnumInputPin);
 
-								UEdGraphPin* OutputPin = EnumLiteralNode->FindPinChecked(UEdGraphSchema_K2::PN_ReturnValue);
-								ParamDataParam->MakeLinkTo(OutputPin);
+								UEdGraphPin* EnumOutputPin = EnumLiteralNode->FindPinChecked(UEdGraphSchema_K2::PN_ReturnValue);
+								ParamDataParam->MakeLinkTo(EnumOutputPin);
 							}
 							else
 							{
@@ -272,9 +331,8 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 								MakeLiteralNode->SetFromFunction(MakeLiteralFunction);
 								MakeLiteralNode->AllocateDefaultPins();
 
-								UEdGraphPin* MakeLiteralPin = MakeLiteralNode->FindPinChecked(TEXT("Value"));
-								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *MakeLiteralPin);
-
+								UEdGraphPin* MakeLiteralValuePin = MakeLiteralNode->FindPinChecked(TEXT("Value"));
+								CompilerContext.MovePinLinksToIntermediate(*ParamDataPin, *MakeLiteralValuePin);
 								UEdGraphPin* OutputPin = MakeLiteralNode->GetReturnValuePin();
 								ParamDataParam->MakeLinkTo(OutputPin);
 							}
@@ -317,136 +375,142 @@ void UK2Node_SendEvent::RefreshPinTypes()
 		return;
 	}
 
-	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME()
+	GAME_SCOPED_TRACK_LOG_AUTO_BLUEPRINT_NAME();
 
 	const FString EventName = GetCurrentEventName();
-	if (!EventName.IsEmpty() && !bIsBindSuccess)
-	{
-		bIsBindSuccess = FGameEventTypeManager::Get()->BindEventTypeNotify(EventName, GetUniqueID(), [this]
-		{
-			if (IsValid(this))
-			{
-				RefreshPinTypes();
-			}
-		});
-	}
 	FEventTypeInfo TypeInfo;
 	const bool bHasTypeInfo = FGameEventTypeManager::Get()->GetEventTypeInfo(EventName, TypeInfo);
-	const bool bIsNoParams = EventName.IsEmpty() || !TypeInfo.IsValid();
+	const bool bIsNoParams = EventName.IsEmpty() || !bHasTypeInfo || !TypeInfo.IsValid();
 
 	const TArray<UEdGraphPin*> CurrentParamDataPins = GetAllParamDataPins();
 
 	if (bIsNoParams)
 	{
-		// Remove all parameter pins
+		// If there are no parameters, remove all existing parameter pins.
 		for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
 		{
 			if (ParamDataPin)
 			{
 				ParamDataPin->BreakAllPinLinks();
-				RemovePin(ParamDataPin);
+				SafeRemovePin(ParamDataPin);
 			}
 		}
 	}
 	else
 	{
+		// This block handles the case where the event should have parameters.
 		const int32 ExpectedParamCount = TypeInfo.GetParameterCount();
 		const int32 CurrentParamCount = CurrentParamDataPins.Num();
 
-		//Recreate pins only when there is clear type information and no match
-		if (bHasTypeInfo && (CurrentParamCount != ExpectedParamCount || !CheckParamDataPinsTypeMatch()))
+		// 1. Remove extra pins from the end if the new parameter count is smaller.
+		// Iterate backwards to safely remove elements.
+		if (CurrentParamCount > ExpectedParamCount)
 		{
-			// Save existing pin connections and default values
-			TArray<TArray<UEdGraphPin*>> OldConnections;
-			TArray<FString> OldDefaultValues;
-			TArray<UObject*> OldDefaultObjects;
-			TArray<FText> OldDefaultTextValues;
-
-			for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
+			for (int32 i = CurrentParamCount - 1; i >= ExpectedParamCount; --i)
 			{
-				if (ParamDataPin)
+				if (UEdGraphPin* PinToRemove = CurrentParamDataPins[i])
 				{
-					OldConnections.Add(ParamDataPin->LinkedTo);
-					OldDefaultValues.Add(ParamDataPin->DefaultValue);
-					OldDefaultObjects.Add(ParamDataPin->DefaultObject);
-					OldDefaultTextValues.Add(ParamDataPin->DefaultTextValue);
+					PinToRemove->BreakAllPinLinks();
+					SafeRemovePin(PinToRemove);
 				}
 			}
+		}
 
-			// Remove existing parameter pins
-			for (UEdGraphPin* ParamDataPin : CurrentParamDataPins)
+		// 2. Iterate through all expected parameters to update existing pins or create new ones.
+		for (int32 i = 0; i < ExpectedParamCount; ++i)
+		{
+			const FEventParameterInfo* ParamInfo = TypeInfo.GetParameterInfo(i);
+			if (!ParamInfo)
 			{
-				if (ParamDataPin)
-				{
-					ParamDataPin->BreakAllPinLinks();
-					RemovePin(ParamDataPin);
-				}
+				// Skip if parameter info is somehow invalid for this index.
+				continue;
 			}
 
-			// Create new parameter pins
-			for (int32 i = 0; i < ExpectedParamCount; ++i)
+			// Get the current pin at this index, if it exists.
+			UEdGraphPin* CurrentPin = i < CurrentParamDataPins.Num() ? CurrentParamDataPins[i] : nullptr;
+
+			// Check if the current pin is compatible with the expected parameter type.
+			const bool bIsCompatible = CurrentPin &&
+			                           CurrentPin->PinType.PinCategory == ParamInfo->PinCategory &&
+			                           CurrentPin->PinType.PinSubCategory == ParamInfo->PinSubCategory &&
+			                           CurrentPin->PinType.PinSubCategoryObject == ParamInfo->PinSubCategoryObject.Get() &&
+			                           CurrentPin->PinType.ContainerType == ParamInfo->ContainerType;
+
+			// If the pin is already correct, do nothing and continue to the next one. This preserves connections.
+			if (bIsCompatible)
 			{
-				if (const FEventParameterInfo* ParamInfo = TypeInfo.GetParameterInfo(i))
+				continue;
+			}
+
+			// If the pin is not compatible (or doesn't exist), we need to recreate it.
+			// First, remove the old, incompatible pin if it exists.
+			if (CurrentPin)
+			{
+				CurrentPin->BreakAllPinLinks();
+				SafeRemovePin(CurrentPin);
+			}
+
+			// Create the new, correct pin for the current parameter.
+			// Assumes CreateParamDataPinAtIndex correctly creates a pin at the specified index.
+			if (UEdGraphPin* NewParamDataPin = CreateParamDataPinAtIndex(i, ParamInfo->PinCategory))
+			{
+				// Configure the new pin's type information based on ParamInfo.
+				NewParamDataPin->PinType.PinCategory = ParamInfo->PinCategory;
+				NewParamDataPin->PinType.PinSubCategory = ParamInfo->PinSubCategory;
+				NewParamDataPin->PinType.PinSubCategoryObject = ParamInfo->PinSubCategoryObject;
+				NewParamDataPin->PinType.PinValueType = ParamInfo->PinValueType;
+				NewParamDataPin->PinType.ContainerType = ParamInfo->ContainerType;
+
+				// Set default value behavior based on the pin category
+				if (NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object ||
+				    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Class ||
+				    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftObject ||
+				    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftClass)
 				{
-					UEdGraphPin* NewParamDataPin = CreateParamDataPinAtIndex(i, ParamInfo->PinCategory);
-					NewParamDataPin->PinType.PinCategory = ParamInfo->PinCategory;
-					NewParamDataPin->PinType.PinSubCategory = ParamInfo->PinSubCategory;
-					NewParamDataPin->PinType.PinSubCategoryObject = ParamInfo->PinSubCategoryObject;
-					NewParamDataPin->PinType.PinValueType = ParamInfo->PinValueType;
-					NewParamDataPin->PinType.ContainerType = ParamInfo->ContainerType;
-
-					if (NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object ||
-					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Class ||
-					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftObject ||
-					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_SoftClass ||
-					    NewParamDataPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct)
-					{
-						NewParamDataPin->bDefaultValueIsIgnored = true;
-					}
-					else
-					{
-						NewParamDataPin->bDefaultValueIsIgnored = false;
-					}
-
-					// Attempt to restore old connections and default settings
-					if (OldConnections.IsValidIndex(i))
-					{
-						for (UEdGraphPin* OldLinkedPin : OldConnections[i])
-						{
-							if (OldLinkedPin && OldLinkedPin->GetOwningNode())
-							{
-								NewParamDataPin->MakeLinkTo(OldLinkedPin);
-							}
-						}
-					}
-
-					if (OldDefaultValues.IsValidIndex(i))
-					{
-						NewParamDataPin->DefaultValue = OldDefaultValues[i];
-					}
-
-					if (OldDefaultObjects.IsValidIndex(i))
-					{
-						NewParamDataPin->DefaultObject = OldDefaultObjects[i];
-					}
-
-					if (OldDefaultTextValues.IsValidIndex(i))
-					{
-						NewParamDataPin->DefaultTextValue = OldDefaultTextValues[i];
-					}
+					NewParamDataPin->bDefaultValueIsIgnored = true;
 				}
+				else
+				{
+					NewParamDataPin->bDefaultValueIsIgnored = false;
+				}
+
+				GetDefault<UEdGraphSchema_K2>()->SetPinAutogeneratedDefaultValueBasedOnType(NewParamDataPin);
 			}
 		}
 	}
 
+	// Notify the graph that the node has been modified to trigger a visual update.
 	GetGraph()->NotifyNodeChanged(this);
+}
+
+void UK2Node_SendEvent::SafeRemovePin(UEdGraphPin* PinToRemove)
+{
+	if (!PinToRemove)
+	{
+		return;
+	}
+
+	// If the pin is split, the correct engine-level way to clean it up is to recombine it first.
+	// This will handle breaking links on sub-pins and cleaning them up properly.
+	if (PinToRemove->SubPins.Num() > 0)
+	{
+		if (const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>())
+		{
+			// Recombining the pin is the canonical way to "un-split" it.
+			K2Schema->RecombinePin(PinToRemove);
+		}
+	}
+
+	// Now that the pin is guaranteed to be a single entity, break its links and remove it from the node.
+	PinToRemove->BreakAllPinLinks(true); // 'true' notifies the other end of the link
+	RemovePin(PinToRemove);
 }
 
 UEdGraphPin* UK2Node_SendEvent::CreateParamDataPinAtIndex(const int32 Index, const FName PinCategory)
 {
 	const FName PinName = UGameEventNodeUtils::GetMultiParameterPinName(FK2Node_SendEventPinName::ParamDataName, Index);
 	UEdGraphPin* Pin = CreatePin(EGPD_Input, PinCategory, PinName);
-	if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object || Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Struct)
+	if (Pin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object)
 	{
 		Pin->bDefaultValueIsIgnored = true;
 	}
@@ -454,6 +518,7 @@ UEdGraphPin* UK2Node_SendEvent::CreateParamDataPinAtIndex(const int32 Index, con
 	{
 		Pin->bDefaultValueIsIgnored = false;
 	}
+
 	return Pin;
 }
 
@@ -461,18 +526,12 @@ TArray<UEdGraphPin*> UK2Node_SendEvent::GetAllParamDataPins() const
 {
 	TArray<UEdGraphPin*> ParamDataPins;
 
-	for (int32 i = 0; i < GlobalConfig.MaxParameterNum; ++i)
+	int32 Index = 0;
+	while (UEdGraphPin* Pin = GetParamDataPinByIndex(Index))
 	{
-		if (UEdGraphPin* Pin = GetParamDataPinByIndex(i))
-		{
-			ParamDataPins.Add(Pin);
-		}
-		else
-		{
-			break;
-		}
+		ParamDataPins.Add(Pin);
+		Index++;
 	}
-
 	return ParamDataPins;
 }
 

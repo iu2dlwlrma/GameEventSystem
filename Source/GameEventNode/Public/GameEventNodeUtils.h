@@ -63,6 +63,8 @@ public:
 	static void SendEventEightParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5, const int32& ParamData6, const int32& ParamData7);
 	DECLARE_FUNCTION(execSendEventEightParam);
 
+	static void ProcessEventParameters(FFrame& Stack, FEventContext& EventContext, int32 NumParams);
+	
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEvent (No Param)", meta = ( WorldContext = "WorldContextObject"))
 	static void SendEvent_NoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned);
 

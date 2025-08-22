@@ -228,7 +228,9 @@ struct GAMEEVENTSYSTEM_API FListenerContext
 
 	FString GetName() const
 	{
-		return FunctionName.IsEmpty() ? PropertyDelegate.IsBound() ? PropertyDelegate.GetFunctionName().ToString() : FunctionName : "Lambda";
+		return PropertyDelegate.IsBound()
+				? PropertyDelegate.GetFunctionName().ToString()
+				: (!FunctionName.IsEmpty() ? FunctionName : TEXT("Lambda"));
 	}
 
 	friend uint32 GetTypeHash(const FListenerContext& Listener)

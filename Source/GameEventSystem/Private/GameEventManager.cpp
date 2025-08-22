@@ -51,33 +51,19 @@ void FGameEventManager::GetFunctionParameters(const UFunction* Function, TArray<
 		return;
 	}
 
-	for (TFieldIterator<FProperty> PropIt(Function); PropIt && PropIt->PropertyFlags & CPF_Parm; ++PropIt)
+	// Iterate through all properties of the function.
+	// The loop condition correctly filters for parameters (`CPF_Parm`) and stops when it encounters
+	// a non-parameter property (like a local variable) or the return value.
+	for (TFieldIterator<FProperty> PropIt(Function); PropIt && (PropIt->PropertyFlags & CPF_Parm); ++PropIt)
 	{
+		// A function's input parameter is any parameter that is NOT an output parameter.
+		// This correctly includes pass-by-value (e.g., int32) and const-ref (e.g., const FString&) parameters,
+		// while excluding non-const ref (e.g., FString& OutName) and return parameters.
 		if (!PropIt->HasAnyPropertyFlags(CPF_OutParm) || PropIt->HasAnyPropertyFlags(CPF_ReferenceParm))
 		{
 			OutParamProperties.Add(*PropIt);
 		}
 	}
-}
-
-bool FGameEventManager::IsNumericProperty(const FProperty* Property)
-{
-	if (!Property)
-	{
-		return false;
-	}
-
-	// Check if it's a numeric property type
-	return Property->IsA<FIntProperty>() ||
-	       Property->IsA<FInt8Property>() ||
-	       Property->IsA<FInt16Property>() ||
-	       Property->IsA<FInt64Property>() ||
-	       Property->IsA<FUInt16Property>() ||
-	       Property->IsA<FUInt32Property>() ||
-	       Property->IsA<FUInt64Property>() ||
-	       Property->IsA<FFloatProperty>() ||
-	       Property->IsA<FDoubleProperty>() ||
-	       Property->IsA<FByteProperty>();
 }
 
 bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, const TArray<FPropertyContext>& PropertyContexts)
@@ -95,30 +81,32 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 	const int32 ExpectedParamCount = FunctionParams.Num();
 	const int32 ProvidedParamCount = PropertyContexts.Num();
 
-	if (ProvidedParamCount > ExpectedParamCount)
+	// Check for an exact match of parameter counts.
+	if (ProvidedParamCount != ExpectedParamCount)
 	{
-		GES_LOG_WARNING(TEXT("Event[%s] - Too many parameters: expected %d, got %d"),
+		GES_LOG_WARNING(TEXT("Event[%s] - Parameter count mismatch: expected %d, but got %d."),
 		                *FunctionName,
 		                ExpectedParamCount,
 		                ProvidedParamCount);
 		return false;
 	}
 
-	// Validate provided parameters
+	// Validate provided parameters type by type
 	for (int32 i = 0; i < ProvidedParamCount; ++i)
 	{
-		if (!PropertyContexts[i].IsValid())
-		{
-			GES_LOG_WARNING(TEXT("Event[%s] - Parameter[%d] context is invalid"), *FunctionName, i);
-			return false;
-		}
+		const FProperty* ExpectedProperty = FunctionParams[i];
+		const FProperty* ProvidedProperty = PropertyContexts[i].Property.Get();
 
-		if (!IsParameterCompatible(FunctionParams[i], PropertyContexts[i].Property.Get()))
+		if (!IsParameterCompatible(ExpectedProperty, ProvidedProperty))
 		{
-			GES_LOG_WARNING(TEXT("Event[%s] - Parameter[%d] [%s] type mismatch"),
+			const FString ExpectedTypeName = ExpectedProperty->GetCPPType();
+			const FString ProvidedTypeName = ProvidedProperty->GetCPPType();
+			GES_LOG_WARNING(TEXT("Event[%s] - Parameter[%d] ('%s') type mismatch. Expected compatible with '%s', but got '%s'."),
 			                *FunctionName,
 			                i,
-			                *FunctionParams[i]->GetName());
+			                *ExpectedProperty->GetName(),
+			                *ExpectedTypeName,
+			                *ProvidedTypeName);
 			return false;
 		}
 	}
@@ -126,57 +114,20 @@ bool FGameEventManager::ValidateFunctionParameters(const UFunction* Function, co
 	return true;
 }
 
-bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FProperty* ProvidedParam)
+bool FGameEventManager::IsParameterCompatible(const FProperty* ExpectedParam, const FProperty* ProvidedParam)
 {
 	if (!ExpectedParam || !ProvidedParam)
 	{
 		return false;
 	}
 
-	// Exact match
-	if (ExpectedParam->GetClass() == ProvidedParam->GetClass())
-	{
-		return true;
-	}
-
-	// Struct type
-	if (const FStructProperty* ExpectedStruct = CastField<FStructProperty>(ExpectedParam))
-	{
-		if (const FStructProperty* ProvidedStruct = CastField<FStructProperty>(ProvidedParam))
-		{
-			return ExpectedStruct->Struct == ProvidedStruct->Struct;
-		}
-	}
-	// Object type
-	else if (const FObjectProperty* ExpectedObj = CastField<FObjectProperty>(ExpectedParam))
-	{
-		if (const FObjectProperty* ProvidedObj = CastField<FObjectProperty>(ProvidedParam))
-		{
-			return ProvidedObj->PropertyClass->IsChildOf(ExpectedObj->PropertyClass);
-		}
-	}
-	// Enum type
-	else if (const FEnumProperty* ExpectedEnum = CastField<FEnumProperty>(ExpectedParam))
-	{
-		if (const FEnumProperty* ProvidedEnum = CastField<FEnumProperty>(ProvidedParam))
-		{
-			return ExpectedEnum->GetEnum() == ProvidedEnum->GetEnum();
-		}
-	}
-	// Byte property (enum)
-	else if (const FByteProperty* ExpectedByte = CastField<FByteProperty>(ExpectedParam))
-	{
-		if (const FByteProperty* ProvidedByte = CastField<FByteProperty>(ProvidedParam))
-		{
-			return ExpectedByte->Enum == ProvidedByte->Enum;
-		}
-	}
 	// Array type
-	else if (const FArrayProperty* ExpectedArray = CastField<FArrayProperty>(ExpectedParam))
+	if (const FArrayProperty* ExpectedArray = CastField<FArrayProperty>(ExpectedParam))
 	{
 		if (const FArrayProperty* ProvidedArray = CastField<FArrayProperty>(ProvidedParam))
 		{
-			return ExpectedArray->Inner->GetClass() == ProvidedArray->Inner->GetClass();
+			// RECURSIVE CHECK: The compatibility of the array depends on the compatibility of its inner elements.
+			return IsParameterCompatible(ExpectedArray->Inner, ProvidedArray->Inner);
 		}
 	}
 	// Set type
@@ -184,7 +135,8 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 	{
 		if (const FSetProperty* ProvidedSet = CastField<FSetProperty>(ProvidedParam))
 		{
-			return ExpectedSet->ElementProp->GetClass() == ProvidedSet->ElementProp->GetClass();
+			// RECURSIVE CHECK
+			return IsParameterCompatible(ExpectedSet->ElementProp, ProvidedSet->ElementProp);
 		}
 	}
 	// Map type
@@ -192,13 +144,68 @@ bool FGameEventManager::IsParameterCompatible(FProperty* ExpectedParam, FPropert
 	{
 		if (const FMapProperty* ProvidedMap = CastField<FMapProperty>(ProvidedParam))
 		{
-			return ExpectedMap->KeyProp->GetClass() == ProvidedMap->KeyProp->GetClass() &&
-			       ExpectedMap->ValueProp->GetClass() == ProvidedMap->ValueProp->GetClass();
+			// RECURSIVE CHECK for both key and value.
+			return IsParameterCompatible(ExpectedMap->KeyProp, ProvidedMap->KeyProp) &&
+			       IsParameterCompatible(ExpectedMap->ValueProp, ProvidedMap->ValueProp);
 		}
 	}
+	// Byte Enum
+	else if (const FByteProperty* ExpectedByte = CastField<FByteProperty>(ExpectedParam))
+	{
+		if (const FEnumProperty* ProvidedByte = CastField<FEnumProperty>(ProvidedParam))
+		{
+			if (ExpectedByte->Enum == ProvidedByte->GetEnum())
+			{
+				return true;
+			}
+		}
+	}
+	else if (const FEnumProperty* ExpectedEnum = CastField<FEnumProperty>(ExpectedParam))
+	{
+		if (const FByteProperty* ProvidedByte = CastField<FByteProperty>(ProvidedParam))
+		{
+			// Todo ProvidedByte->Enum Always nullptr
+			// if (ExpectedEnum->GetEnum() == ProvidedByte->Enum)
+			// {
+			// 	return true;
+			// }
+			return true;
+		}
+	}
+	// check for an exact class match (e.g., FIntProperty == FIntProperty).
+	// This is fast and covers most primitive types.
+	if (ExpectedParam->GetClass() == ProvidedParam->GetClass())
+	{
+		// For complex types that matched their class, we must check their inner types.
+		// Object/Class properties: Check for class compatibility (inheritance).
+		if (const FObjectProperty* ExpectedObj = CastField<FObjectProperty>(ExpectedParam))
+		{
+			const FObjectProperty* ProvidedObj = CastField<FObjectProperty>(ProvidedParam);
+			// This correctly handles cases where an AActor is expected and an APawn is provided.
+			return ProvidedObj && ProvidedObj->PropertyClass->IsChildOf(ExpectedObj->PropertyClass);
+		}
 
-	// Numeric type compatibility
-	return IsNumericProperty(ExpectedParam) && IsNumericProperty(ProvidedParam);
+		// Struct properties: Must be the exact same struct type.
+		if (const FStructProperty* ExpectedStruct = CastField<FStructProperty>(ExpectedParam))
+		{
+			const FStructProperty* ProvidedStruct = CastField<FStructProperty>(ProvidedParam);
+			return ProvidedStruct && ExpectedStruct->Struct == ProvidedStruct->Struct;
+		}
+
+		// Enum properties: Must be the exact same enum.
+		if (const FEnumProperty* ExpectedEnum = CastField<FEnumProperty>(ExpectedParam))
+		{
+			const FEnumProperty* ProvidedEnum = CastField<FEnumProperty>(ProvidedParam);
+			return ProvidedEnum && ExpectedEnum->GetEnum() == ProvidedEnum->GetEnum();
+		}
+
+		// For all other types with matching classes (FIntProperty, FFloatProperty, etc.), they are compatible.
+		return true;
+	}
+
+	// By default, if none of the above conditions are met, the types are not compatible.
+	// We avoid the overly permissive numeric check from the original code.
+	return false;
 }
 
 void FGameEventManager::RemoveListenerFromEvent(const FEventId& EventId, const FListenerContext& Listener)
@@ -873,6 +880,10 @@ void FGameEventManager::HandleCompatiblePropertyTypes(FProperty* DestProperty, c
 	{
 		CopyObjectProperty(DestProperty, ObjProp, PropertyContext.PropertyPtr, ParamsBuffer);
 	}
+	else if (FByteProperty* ByteProp = CastField<FByteProperty>(PropertyContext.Property.Get()))
+	{
+		CopyEnumProperty(DestProperty, ByteProp, PropertyContext.PropertyPtr, ParamsBuffer);
+	}
 }
 
 void FGameEventManager::CopyStructProperty(FProperty* DestProperty, const FStructProperty* StructProp, const void* SrcPtr, uint8* ParamsBuffer)
@@ -894,6 +905,19 @@ void FGameEventManager::CopyObjectProperty(FProperty* DestProperty, const FObjec
 		if (!ObjectValue || ObjectValue->IsA(DestObjProp->PropertyClass))
 		{
 			DestObjProp->SetObjectPropertyValue(ParamsBuffer + DestObjProp->GetOffset_ForUFunction(), ObjectValue);
+		}
+	}
+}
+
+void FGameEventManager::CopyEnumProperty(FProperty* DestProperty, const FByteProperty* ByteProp, const void* SrcPtr, uint8* ParamsBuffer)
+{
+	if (const FEnumProperty* DestEnumProp = CastField<FEnumProperty>(DestProperty))
+	{
+		void* DestPtr = ParamsBuffer + DestEnumProp->GetOffset_ForUFunction();
+		const uint64 SourceValue = ByteProp->GetPropertyValue(SrcPtr);
+		if (const FNumericProperty* UnderlyingProp = DestEnumProp->GetUnderlyingProperty())
+		{
+			UnderlyingProp->SetIntPropertyValue(DestPtr,SourceValue);
 		}
 	}
 }

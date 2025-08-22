@@ -24,6 +24,7 @@ protected:
 	void RefreshPinTypes();
 	
 private:
+	void SafeRemovePin(UEdGraphPin* PinToRemove);
 	UEdGraphPin* CreateParamDataPinAtIndex(const int32 Index, const FName PinCategory);
 	TArray<UEdGraphPin*> GetAllParamDataPins() const;
 	UEdGraphPin* GetParamDataPinByIndex(const int32 Index) const;

@@ -25,9 +25,8 @@ public:
 #pragma region "static"
 	static void GetFunctionParameters(const UFunction* Function, TArray<FProperty*>& OutParamProperties);
 
-	static bool IsNumericProperty(const FProperty* Property);
 	static bool ValidateFunctionParameters(const UFunction* Function, const TArray<FPropertyContext>& PropertyContexts);
-	static bool IsParameterCompatible(FProperty* ExpectedParam, FProperty* ProvidedParam);
+	static bool IsParameterCompatible(const FProperty* ExpectedParam, const FProperty* ProvidedParam);
 #pragma endregion "static"
 
 #pragma region  "Listener"
@@ -107,6 +106,7 @@ private:
 	void CopyArrayProperty(const FArrayProperty* ArrayProp, const void* SrcPtr, void* DestPtr);
 	void CopyStructProperty(FProperty* DestProperty, const FStructProperty* StructProp, const void* SrcPtr, uint8* ParamsBuffer);
 	void CopyObjectProperty(FProperty* DestProperty, const FObjectProperty* ObjProp, const void* SrcPtr, uint8* ParamsBuffer);
+	void CopyEnumProperty(FProperty* DestProperty, const FByteProperty* ByteProp, const void* SrcPtr, uint8* ParamsBuffer);
 	int32 RemoveListenersForReceiverInternal(const UObject* Receiver, const TSet<FEventId>* EventsToProcess = nullptr);
 	void RemoveListenerFromEvent(const FEventId& EventId, const FListenerContext& Listener);
 

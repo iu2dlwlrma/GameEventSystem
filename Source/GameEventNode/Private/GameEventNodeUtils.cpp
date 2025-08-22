@@ -271,16 +271,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEvent)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	Stack.Step(Stack.Object, nullptr);
-
-	if (Stack.MostRecentProperty != nullptr)
-	{
-		EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-	}
-	else
-	{
-		EventContext.AddPropertyContext(nullptr, nullptr);
-	}
+	ProcessEventParameters(Stack, EventContext, 1);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -302,18 +293,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventTwoParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 2; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 2);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -335,18 +315,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventThreeParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 3; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 3);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -368,18 +337,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFourParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 4; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 4);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -401,18 +359,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFiveParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 5; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 5);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -442,18 +389,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSixParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 6; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 6);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -484,18 +420,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSevenParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 7; ++i)
-	{
-		Stack.Step(Stack.Object, nullptr);
-		if (Stack.MostRecentProperty != nullptr)
-		{
-			EventContext.AddPropertyContext(CastField<FProperty>(Stack.MostRecentProperty), Stack.MostRecentPropertyAddress);
-		}
-		else
-		{
-			EventContext.AddPropertyContext(nullptr, nullptr);
-		}
-	}
+	ProcessEventParameters(Stack, EventContext, 7);
 
 	P_FINISH;
 	P_NATIVE_BEGIN;
@@ -527,7 +452,17 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventEightParam)
 	Stack.StepCompiledIn<FProperty>(&EventContext.EventId.Key);
 	Stack.StepCompiledIn<FBoolProperty>(&EventContext.bPinned);
 
-	for (int32 i = 0; i < 8; ++i)
+	ProcessEventParameters(Stack, EventContext, 8);
+
+	P_FINISH;
+	P_NATIVE_BEGIN;
+		FGameEventManager::Get()->SendEvent(EventContext);
+	P_NATIVE_END;
+}
+
+void UGameEventNodeUtils::ProcessEventParameters(FFrame& Stack, FEventContext& EventContext, int32 NumParams)
+{
+	for (int32 i = 0; i < NumParams; ++i)
 	{
 		Stack.Step(Stack.Object, nullptr);
 		if (Stack.MostRecentProperty != nullptr)
@@ -539,11 +474,6 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventEightParam)
 			EventContext.AddPropertyContext(nullptr, nullptr);
 		}
 	}
-
-	P_FINISH;
-	P_NATIVE_BEGIN;
-		FGameEventManager::Get()->SendEvent(EventContext);
-	P_NATIVE_END;
 }
 
 void UGameEventNodeUtils::SendEvent_NoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned)
