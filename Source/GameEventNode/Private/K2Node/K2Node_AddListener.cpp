@@ -437,7 +437,7 @@ void UK2Node_AddListener::UpdateEventSignature() const
 		}
 		else
 		{
-			UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+			UE_LOG_GAS_WARNING(TEXT("Event name is empty, skipping type analysis"));
 		}
 		
 		UpdateCustomEventSignatureFromDataType();
@@ -455,19 +455,19 @@ bool UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
 	const FString EventName = GetCurrentEventName();
 	if (EventName.IsEmpty())
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+		UE_LOG_GAS_WARNING(TEXT("Event name is empty, skipping type analysis"));
 		return false;
 	}
 
 	const UEdGraphPin* FunctionNamePin = GetFunctionNamePin();
 	if (!FunctionNamePin || FunctionNamePin->GetDefaultAsString().IsEmpty())
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: Function name is empty, skipping type analysis"));
+		UE_LOG_GAS_WARNING(TEXT("Function name is empty, skipping type analysis"));
 		return false;
 	}
 
 	const FString FunctionName = FunctionNamePin->GetDefaultAsString();
-	UE_LOG_GAS_EDITOR(TEXT("AddListener: Analyzing function '%s' for event '%s'"), *FunctionName, *EventName);
+	UE_LOG_GAS_EDITOR(TEXT("Analyzing function '%s' for event '%s'"), *FunctionName, *EventName);
 
 	UClass* TargetClass = nullptr;
 	UEdGraphPin* SelfPin = GetSelfPin();
@@ -500,7 +500,7 @@ bool UK2Node_AddListener::AnalyzeFunctionAndRegisterEventType() const
 		TargetClass = GetBlueprintClassFromNode();
 	}
 
-	UE_LOG_GAS_EDITOR(TEXT("AddListener: Final target class: %s, looking for function: %s"), *TargetClass->GetName(), *FunctionName);
+	UE_LOG_GAS_EDITOR(TEXT("Final target class: %s, looking for function: %s"), *TargetClass->GetName(), *FunctionName);
 
 	return FGameEventTypeManager::Get()->AnalyzeAndRegisterFunctionType(EventName, TargetClass, FunctionName);
 }
@@ -510,7 +510,7 @@ bool UK2Node_AddListener::CheckFunctionParamCount() const
 	const FString EventName = GetCurrentEventName();
 	if (EventName.IsEmpty())
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: Event name is empty, skipping type analysis"));
+		UE_LOG_GAS_WARNING(TEXT("Event name is empty, skipping type analysis"));
 		return false;
 	}
 
@@ -620,7 +620,7 @@ void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* Ca
 
 	if (!CallFuncNode || !SourceGraph)
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: HandleDelegateExpansion - CallFuncNode or SourceGraph is null"));
+		UE_LOG_GAS_WARNING(TEXT("HandleDelegateExpansion - CallFuncNode or SourceGraph is null"));
 		return;
 	}
 
@@ -628,14 +628,14 @@ void UK2Node_AddListener::HandleDelegateExpansion(const UK2Node_CallFunction* Ca
 	UEdGraphPin* DelegateParam = CallFuncNode->FindPinChecked(PropertyDelegateParamName);
 	if (!DelegateParam)
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: HandleDelegateExpansion - DelegateParam is null"));
+		UE_LOG_GAS_WARNING(TEXT("HandleDelegateExpansion - DelegateParam is null"));
 		return;
 	}
 
 	const UEdGraphPin* DelegatePin = GetDelegatePin();
 	if (!DelegatePin || DelegatePin->LinkedTo.Num() == 0)
 	{
-		UE_LOG_GAS_WARNING(TEXT("AddListener: HandleDelegateExpansion - DelegatePin is null or not connected"));
+		UE_LOG_GAS_WARNING(TEXT("HandleDelegateExpansion - DelegatePin is null or not connected"));
 		return;
 	}
 
