@@ -3,6 +3,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Async/Async.h"
+#include "HAL/ThreadManager.h"
 
 // ========================================
 // UGameEventTestReceiver 实现
@@ -17,11 +18,11 @@ void UGameEventTestReceiver::ResetTestState()
 {
 	EventReceivedCount = 0;
 	AtomicEventCount.store(0);
-
+	
 	LastReceivedString = TEXT("");
 	LastReceivedInt = 0;
 	LastReceivedFloat = 0.0f;
-
+	
 	// 重置所有类型的最后接收值
 	LastBoolValue = false;
 	LastInt8Value = 0;
@@ -31,10 +32,10 @@ void UGameEventTestReceiver::ResetTestState()
 	LastInt64Value = 0;
 	LastUInt64Value = 0;
 	LastDoubleValue = 0.0;
-
+	
 	LastNameValue = NAME_None;
 	LastTextValue = FText::GetEmpty();
-
+	
 	LastVectorValue = FVector::ZeroVector;
 	LastVector2DValue = FVector2D::ZeroVector;
 	LastVector4Value = FVector4::Zero();
@@ -43,28 +44,28 @@ void UGameEventTestReceiver::ResetTestState()
 	LastTransformValue = FTransform::Identity;
 	LastColorValue = FColor::White;
 	LastLinearColorValue = FLinearColor::White;
-
+	
 	LastEnumValue = ETestEnum::None;
 	LastPriorityValue = EGameEventPriority::Normal;
 	LastStateValue = EGameEventState::Inactive;
-
+	
 	LastSimpleStructValue = FSimpleTestStruct();
 	LastComplexStructValue = FComplexTestStruct();
 	LastNestedStructValue = FNestedContainerStruct();
-
+	
 	LastIntArrayValue.Empty();
 	LastStringArrayValue.Empty();
 	LastIntSetValue.Empty();
 	LastStringToIntMapValue.Empty();
 	LastIntToFloatMapValue.Empty();
-
+	
 	LastNestedIntArrayValue.Empty();
 	LastStringToFloatArrayMapValue.Empty();
 	LastStructArrayValue.Empty();
-
+	
 	LastMultiParamValues = FMultiParamValues();
 	LastComplexMultiParamValues = FComplexMultiParamValues();
-
+	
 	LastBoundaryEnumValue = EBoundaryEnum::MinValue;
 	LastNonBlueprintEnumValue = ENonBlueprintEnum::Option1;
 }
@@ -73,7 +74,7 @@ void UGameEventTestReceiver::ResetTestState()
 // 基础类型事件处理函数实现
 // ========================================
 
-void UGameEventTestReceiver::OnBoolEvent(const bool bValue)
+void UGameEventTestReceiver::OnBoolEvent(bool bValue)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -81,7 +82,7 @@ void UGameEventTestReceiver::OnBoolEvent(const bool bValue)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到布尔事件: %s"), bValue ? TEXT("真") : TEXT("假"));
 }
 
-void UGameEventTestReceiver::OnInt8Event(const int8 Value)
+void UGameEventTestReceiver::OnInt8Event(int8 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -89,7 +90,7 @@ void UGameEventTestReceiver::OnInt8Event(const int8 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到8位整数事件: %d"), Value);
 }
 
-void UGameEventTestReceiver::OnUInt8Event(const uint8 Value)
+void UGameEventTestReceiver::OnUInt8Event(uint8 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -97,7 +98,7 @@ void UGameEventTestReceiver::OnUInt8Event(const uint8 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到无符号8位整数事件: %u"), Value);
 }
 
-void UGameEventTestReceiver::OnInt16Event(const int16 Value)
+void UGameEventTestReceiver::OnInt16Event(int16 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -105,7 +106,7 @@ void UGameEventTestReceiver::OnInt16Event(const int16 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到16位整数事件: %d"), Value);
 }
 
-void UGameEventTestReceiver::OnUInt16Event(const uint16 Value)
+void UGameEventTestReceiver::OnUInt16Event(uint16 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -113,7 +114,7 @@ void UGameEventTestReceiver::OnUInt16Event(const uint16 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到无符号16位整数事件: %u"), Value);
 }
 
-void UGameEventTestReceiver::OnInt32Event(const int32 Value)
+void UGameEventTestReceiver::OnInt32Event(int32 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -121,14 +122,14 @@ void UGameEventTestReceiver::OnInt32Event(const int32 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到32位整数事件: %d"), Value);
 }
 
-void UGameEventTestReceiver::OnUInt32Event(const uint32 Value)
+void UGameEventTestReceiver::OnUInt32Event(uint32 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到无符号32位整数事件: %u"), Value);
 }
 
-void UGameEventTestReceiver::OnInt64Event(const int64 Value)
+void UGameEventTestReceiver::OnInt64Event(int64 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -136,7 +137,7 @@ void UGameEventTestReceiver::OnInt64Event(const int64 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到64位整数事件: %lld"), Value);
 }
 
-void UGameEventTestReceiver::OnUInt64Event(const uint64 Value)
+void UGameEventTestReceiver::OnUInt64Event(uint64 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -144,7 +145,7 @@ void UGameEventTestReceiver::OnUInt64Event(const uint64 Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到无符号64位整数事件: %llu"), Value);
 }
 
-void UGameEventTestReceiver::OnFloatEvent(const float Value)
+void UGameEventTestReceiver::OnFloatEvent(float Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -152,7 +153,7 @@ void UGameEventTestReceiver::OnFloatEvent(const float Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到浮点数事件: %f"), Value);
 }
 
-void UGameEventTestReceiver::OnDoubleEvent(const double Value)
+void UGameEventTestReceiver::OnDoubleEvent(double Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -284,7 +285,7 @@ void UGameEventTestReceiver::OnStateEvent(EGameEventState Value)
 	UE_LOG(LogTemp, Log, TEXT("📊 接收到状态事件: %d"), (int32)Value);
 }
 
-void UGameEventTestReceiver::OnNonBlueprintEnum64(const ENonBlueprintEnum64 Value)
+void UGameEventTestReceiver::OnNonBlueprintEnum64(ENonBlueprintEnum64 Value)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
@@ -392,19 +393,15 @@ void UGameEventTestReceiver::OnStructArrayEvent(const TArray<FSimpleTestStruct>&
 // 多参数事件处理函数实现
 // ========================================
 
-void UGameEventTestReceiver::OnMultiParamEvent(const int32 IntValue, const FString& StringValue, const bool bBoolValue)
+void UGameEventTestReceiver::OnMultiParamEvent(int32 IntValue, const FString& StringValue, bool bBoolValue)
 {
 	EventReceivedCount++;
 	AtomicEventCount.fetch_add(1);
 	LastMultiParamValues.IntValue = IntValue;
 	LastMultiParamValues.StringValue = StringValue;
 	LastMultiParamValues.bBoolValue = bBoolValue;
-	UE_LOG(LogTemp,
-	       Log,
-	       TEXT("📊 接收到多参数事件: 整数=%d, 字符串=%s, 布尔=%s"),
-	       IntValue,
-	       *StringValue,
-	       bBoolValue ? TEXT("真") : TEXT("假"));
+	UE_LOG(LogTemp, Log, TEXT("📊 接收到多参数事件: 整数=%d, 字符串=%s, 布尔=%s"), 
+	       IntValue, *StringValue, bBoolValue ? TEXT("真") : TEXT("假"));
 }
 
 void UGameEventTestReceiver::OnComplexMultiParamEvent(const FVector& Position, EGameEventPriority Priority, const TArray<int32>& Values)
@@ -414,12 +411,8 @@ void UGameEventTestReceiver::OnComplexMultiParamEvent(const FVector& Position, E
 	LastComplexMultiParamValues.Position = Position;
 	LastComplexMultiParamValues.Priority = Priority;
 	LastComplexMultiParamValues.Values = Values;
-	UE_LOG(LogTemp,
-	       Log,
-	       TEXT("📊 接收到复杂多参数事件: 位置=%s, 优先级=%d, 数组大小=%d"),
-	       *Position.ToString(),
-	       (int32)Priority,
-	       Values.Num());
+	UE_LOG(LogTemp, Log, TEXT("📊 接收到复杂多参数事件: 位置=%s, 优先级=%d, 数组大小=%d"), 
+	       *Position.ToString(), (int32)Priority, Values.Num());
 }
 
 // ========================================
@@ -463,7 +456,7 @@ UGameEventTestReceiver* FGameEventTestHelper::CreateTestReceiver(UObject* Outer)
 	{
 		Outer = GetTransientPackage();
 	}
-
+	
 	UGameEventTestReceiver* TestReceiver = NewObject<UGameEventTestReceiver>(Outer);
 	TestReceiver->ResetTestState();
 	return TestReceiver;
@@ -475,7 +468,7 @@ UComplexTestObject* FGameEventTestHelper::CreateComplexTestObject(UObject* Outer
 	{
 		Outer = GetTransientPackage();
 	}
-
+	
 	return NewObject<UComplexTestObject>(Outer);
 }
 
@@ -496,7 +489,7 @@ void FGameEventTestHelper::CleanupTestEnvironment()
 	}
 }
 
-bool FGameEventTestHelper::VerifyEventReceived(const UGameEventTestReceiver* Receiver, const int32 ExpectedCount)
+bool FGameEventTestHelper::VerifyEventReceived(UGameEventTestReceiver* Receiver, int32 ExpectedCount)
 {
 	if (!Receiver)
 	{
@@ -505,64 +498,64 @@ bool FGameEventTestHelper::VerifyEventReceived(const UGameEventTestReceiver* Rec
 	return Receiver->EventReceivedCount >= ExpectedCount;
 }
 
-void FGameEventTestHelper::WaitForEventProcessing(const float MaxWaitTime)
+void FGameEventTestHelper::WaitForEventProcessing(float MaxWaitTime)
 {
 	const double StartTime = FPlatformTime::Seconds();
-	while (FPlatformTime::Seconds() - StartTime < MaxWaitTime)
+	while ((FPlatformTime::Seconds() - StartTime) < MaxWaitTime)
 	{
 		FPlatformProcess::Sleep(0.001f); // 1毫秒
 	}
 }
 
-double FGameEventTestHelper::MeasureEventPerformance(const TFunction<void()>& TestFunction, const int32 Iterations)
+double FGameEventTestHelper::MeasureEventPerformance(TFunction<void()> TestFunction, int32 Iterations)
 {
 	if (Iterations <= 0)
 	{
 		return 0.0;
 	}
-
+	
 	double TotalTime = 0.0;
-
+	
 	for (int32 i = 0; i < Iterations; ++i)
 	{
 		double StartTime = FPlatformTime::Seconds();
 		TestFunction();
 		double EndTime = FPlatformTime::Seconds();
-		TotalTime += EndTime - StartTime;
+		TotalTime += (EndTime - StartTime);
 	}
-
-	return TotalTime / Iterations * 1000.0; // 转换为毫秒
+	
+	return (TotalTime / Iterations) * 1000.0; // 转换为毫秒
 }
 
-FSimpleTestStruct FGameEventTestHelper::CreateTestSimpleStruct(const int32 IntValue, const FString& StringValue, const bool bBoolValue)
+FSimpleTestStruct FGameEventTestHelper::CreateTestSimpleStruct(int32 IntValue, const FString& StringValue, bool bBoolValue)
 {
 	return FSimpleTestStruct(IntValue, StringValue, bBoolValue);
 }
 
-FComplexTestStruct FGameEventTestHelper::CreateTestComplexStruct(const int32 Id, const FString& Name, const EGameEventPriority Priority)
+FComplexTestStruct FGameEventTestHelper::CreateTestComplexStruct(int32 Id, const FString& Name, EGameEventPriority Priority)
 {
 	FComplexTestStruct Result;
 	Result.Id = Id;
 	Result.Name = Name;
 	Result.Priority = Priority;
 	Result.Position = FVector(Id * 10.0f, Id * 20.0f, Id * 30.0f);
-
+	
 	// 添加一些测试数据
 	for (int32 i = 0; i < 5; ++i)
 	{
 		Result.Values.Add(Id + i);
 	}
-
+	
 	Result.Properties.Add(TEXT("测试属性1"), Id * 1.5f);
 	Result.Properties.Add(TEXT("测试属性2"), Id * 2.5f);
-
+	
 	return Result;
 }
 
 FNestedContainerStruct FGameEventTestHelper::CreateTestNestedStruct()
 {
 	FNestedContainerStruct Result;
-
+	
 	// 创建嵌套整数数组
 	for (int32 i = 0; i < 3; ++i)
 	{
@@ -573,7 +566,7 @@ FNestedContainerStruct FGameEventTestHelper::CreateTestNestedStruct()
 		}
 		Result.NestedIntArrays.Add(InnerArray);
 	}
-
+	
 	// 创建字符串到浮点数组的映射
 	for (int32 i = 0; i < 3; ++i)
 	{
@@ -585,17 +578,17 @@ FNestedContainerStruct FGameEventTestHelper::CreateTestNestedStruct()
 		}
 		Result.StringToFloatArrayMap.Add(Key, FloatArray);
 	}
-
+	
 	// 创建结构体数组
 	for (int32 i = 0; i < 4; ++i)
 	{
 		FSimpleTestStruct TestStruct;
 		TestStruct.IntValue = i * 100;
 		TestStruct.StringValue = FString::Printf(TEXT("嵌套结构体_%d"), i);
-		TestStruct.bBoolValue = i % 2 == 0;
+		TestStruct.bBoolValue = (i % 2 == 0);
 		Result.StructArray.Add(TestStruct);
 	}
-
+	
 	return Result;
 }
 
@@ -609,7 +602,7 @@ bool FGameEventTestHelper::AreEqual(const FComplexTestStruct& A, const FComplexT
 	return A == B;
 }
 
-TArray<int32> FGameEventTestHelper::GenerateRandomIntArray(const int32 Size)
+TArray<int32> FGameEventTestHelper::GenerateRandomIntArray(int32 Size)
 {
 	TArray<int32> Result;
 	for (int32 i = 0; i < Size; ++i)
@@ -619,7 +612,7 @@ TArray<int32> FGameEventTestHelper::GenerateRandomIntArray(const int32 Size)
 	return Result;
 }
 
-TArray<FString> FGameEventTestHelper::GenerateRandomStringArray(const int32 Size)
+TArray<FString> FGameEventTestHelper::GenerateRandomStringArray(int32 Size)
 {
 	TArray<FString> Result;
 	for (int32 i = 0; i < Size; ++i)
@@ -629,7 +622,7 @@ TArray<FString> FGameEventTestHelper::GenerateRandomStringArray(const int32 Size
 	return Result;
 }
 
-TMap<FString, int32> FGameEventTestHelper::GenerateRandomStringToIntMap(const int32 Size)
+TMap<FString, int32> FGameEventTestHelper::GenerateRandomStringToIntMap(int32 Size)
 {
 	TMap<FString, int32> Result;
 	for (int32 i = 0; i < Size; ++i)
@@ -641,24 +634,23 @@ TMap<FString, int32> FGameEventTestHelper::GenerateRandomStringToIntMap(const in
 	return Result;
 }
 
-void FGameEventTestHelper::RunMultiThreadTest(TFunction<void()> TestFunction, const int32 ThreadCount, int32 IterationsPerThread)
+void FGameEventTestHelper::RunMultiThreadTest(TFunction<void()> TestFunction, int32 ThreadCount, int32 IterationsPerThread)
 {
 	TArray<TFuture<void>> Futures;
-
+	
 	for (int32 ThreadIndex = 0; ThreadIndex < ThreadCount; ++ThreadIndex)
 	{
-		TFuture<void> Future = Async(EAsyncExecution::Thread,
-		                             [TestFunction, IterationsPerThread]
-		                             {
-			                             for (int32 i = 0; i < IterationsPerThread; ++i)
-			                             {
-				                             TestFunction();
-			                             }
-		                             });
-
+		TFuture<void> Future = Async(EAsyncExecution::Thread, [TestFunction, IterationsPerThread]()
+		{
+			for (int32 i = 0; i < IterationsPerThread; ++i)
+			{
+				TestFunction();
+			}
+		});
+		
 		Futures.Add(MoveTemp(Future));
 	}
-
+	
 	// 等待所有线程完成
 	for (auto& Future : Futures)
 	{
@@ -666,31 +658,27 @@ void FGameEventTestHelper::RunMultiThreadTest(TFunction<void()> TestFunction, co
 	}
 }
 
-bool FGameEventTestHelper::RunStressTest(const TFunction<void()>& TestFunction, const int32 TotalIterations, const float MaxTimeSeconds)
+bool FGameEventTestHelper::RunStressTest(TFunction<void()> TestFunction, int32 TotalIterations, float MaxTimeSeconds)
 {
 	const double StartTime = FPlatformTime::Seconds();
-
+	
 	for (int32 i = 0; i < TotalIterations; ++i)
 	{
 		TestFunction();
-
+		
 		// 检查是否超时
-		if (FPlatformTime::Seconds() - StartTime > MaxTimeSeconds)
+		if ((FPlatformTime::Seconds() - StartTime) > MaxTimeSeconds)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("⚠️ 压力测试在 %d 次迭代后超时（最大时间: %.2f秒）"), i + 1, MaxTimeSeconds);
 			return false;
 		}
 	}
-
+	
 	const double EndTime = FPlatformTime::Seconds();
 	const double TotalTime = EndTime - StartTime;
-
-	UE_LOG(LogTemp,
-	       Log,
-	       TEXT("✅ 压力测试完成: %d 次迭代，总时间: %.3f秒，平均每次: %.6f秒"),
-	       TotalIterations,
-	       TotalTime,
-	       TotalTime / TotalIterations);
-
+	
+	UE_LOG(LogTemp, Log, TEXT("✅ 压力测试完成: %d 次迭代，总时间: %.3f秒，平均每次: %.6f秒"), 
+	       TotalIterations, TotalTime, TotalTime / TotalIterations);
+	
 	return true;
-}
+} 

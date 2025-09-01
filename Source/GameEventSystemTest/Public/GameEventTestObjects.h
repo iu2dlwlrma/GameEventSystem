@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/Engine.h"
+#include "GameEventTypes.h"
 #include <atomic>
 #include "GameEventTestObjects.generated.h"
 
@@ -15,12 +16,12 @@
 UENUM(BlueprintType)
 enum class ETestEnum : uint8
 {
-	None    = 0 UMETA(DisplayName = "无"),
-	Alpha   = 1 UMETA(DisplayName = "阿尔法"),
-	Beta    = 2 UMETA(DisplayName = "贝塔"),
-	Gamma   = 3 UMETA(DisplayName = "伽马"),
-	Delta   = 4 UMETA(DisplayName = "德尔塔"),
-	Epsilon = 5 UMETA(DisplayName = "艾普西隆")
+	None     = 0 UMETA(DisplayName = "无"),
+	Alpha    = 1 UMETA(DisplayName = "阿尔法"),
+	Beta     = 2 UMETA(DisplayName = "贝塔"),
+	Gamma    = 3 UMETA(DisplayName = "伽马"),
+	Delta    = 4 UMETA(DisplayName = "德尔塔"),
+	Epsilon  = 5 UMETA(DisplayName = "艾普西隆")
 };
 
 /**
@@ -98,6 +99,8 @@ enum class ENonBlueprintEnum64 : uint64
 	Option3 = 45554444
 };
 
+
+
 // ========================================
 // 测试用结构体定义
 // ========================================
@@ -126,25 +129,22 @@ struct GAMEEVENTSYSTEMTEST_API FSimpleTestStruct
 		bBoolValue = false;
 	}
 
-	FSimpleTestStruct(const int32 InInt, const FString& InString, const bool InBool) : IntValue(InInt),
-	                                                                                   StringValue(InString),
-	                                                                                   bBoolValue(InBool)
+	FSimpleTestStruct(int32 InInt, const FString& InString, bool InBool)
+		: IntValue(InInt), StringValue(InString), bBoolValue(InBool)
 	{
 	}
 
 	bool operator==(const FSimpleTestStruct& Other) const
 	{
-		return IntValue == Other.IntValue &&
-		       StringValue == Other.StringValue &&
+		return IntValue == Other.IntValue && 
+		       StringValue == Other.StringValue && 
 		       bBoolValue == Other.bBoolValue;
 	}
 
 	FString ToString() const
 	{
-		return FString::Printf(TEXT("简单结构体[整数值:%d, 字符串值:%s, 布尔值:%s]"),
-		                       IntValue,
-		                       *StringValue,
-		                       bBoolValue ? TEXT("真") : TEXT("假"));
+		return FString::Printf(TEXT("简单结构体[整数值:%d, 字符串值:%s, 布尔值:%s]"), 
+		                       IntValue, *StringValue, bBoolValue ? TEXT("真") : TEXT("假"));
 	}
 };
 
@@ -213,22 +213,17 @@ struct GAMEEVENTSYSTEMTEST_API FComplexTestStruct
 			}
 		}
 
-		return Id == Other.Id &&
-		       Name == Other.Name &&
-		       Priority == Other.Priority &&
+		return Id == Other.Id && 
+		       Name == Other.Name && 
+		       Priority == Other.Priority && 
 		       Position.Equals(Other.Position, 0.001f) &&
 		       bArraysEqual && bMapsEqual;
 	}
 
 	FString ToString() const
 	{
-		return FString::Printf(TEXT("复杂结构体[ID:%d, 名称:%s, 优先级:%d, 位置:%s, 数值数量:%d, 属性数量:%d]"),
-		                       Id,
-		                       *Name,
-		                       static_cast<int32>(Priority),
-		                       *Position.ToString(),
-		                       Values.Num(),
-		                       Properties.Num());
+		return FString::Printf(TEXT("复杂结构体[ID:%d, 名称:%s, 优先级:%d, 位置:%s, 数值数量:%d, 属性数量:%d]"), 
+		                       Id, *Name, (int32)Priority, *Position.ToString(), Values.Num(), Properties.Num());
 	}
 };
 
@@ -256,10 +251,8 @@ struct GAMEEVENTSYSTEMTEST_API FNestedContainerStruct
 
 	FString ToString() const
 	{
-		return FString::Printf(TEXT("嵌套容器结构体[嵌套数组数量:%d, 映射表数量:%d, 结构体数组数量:%d]"),
-		                       NestedIntArrays.Num(),
-		                       StringToFloatArrayMap.Num(),
-		                       StructArray.Num());
+		return FString::Printf(TEXT("嵌套容器结构体[嵌套数组数量:%d, 映射表数量:%d, 结构体数组数量:%d]"), 
+		                       NestedIntArrays.Num(), StringToFloatArrayMap.Num(), StructArray.Num());
 	}
 };
 
@@ -286,7 +279,7 @@ public:
 	int32 EventReceivedCount = 0;
 
 	// 原子计数器 - 用于多线程测试
-	std::atomic<int32> AtomicEventCount { 0 };
+	std::atomic<int32> AtomicEventCount{0};
 
 	// 最后接收到的数据
 	UPROPERTY(BlueprintReadOnly)
@@ -391,7 +384,7 @@ public:
 
 	UFUNCTION()
 	void OnNonBlueprintEnum64(ENonBlueprintEnum64 Value);
-
+	
 	UFUNCTION()
 	void OnSimpleStructEvent(const FSimpleTestStruct& Value);
 
@@ -471,10 +464,10 @@ public:
 	int64 LastInt64Value = 0;
 	uint64 LastUInt64Value = 0;
 	double LastDoubleValue = 0.0;
-
+	
 	FName LastNameValue;
 	FText LastTextValue;
-
+	
 	FVector LastVectorValue = FVector::ZeroVector;
 	FVector2D LastVector2DValue = FVector2D::ZeroVector;
 	FVector4 LastVector4Value = FVector4::Zero();
@@ -483,22 +476,22 @@ public:
 	FTransform LastTransformValue = FTransform::Identity;
 	FColor LastColorValue = FColor::White;
 	FLinearColor LastLinearColorValue = FLinearColor::White;
-
+	
 	ETestEnum LastEnumValue = ETestEnum::None;
 	EGameEventPriority LastPriorityValue = EGameEventPriority::Normal;
 	EGameEventState LastStateValue = EGameEventState::Inactive;
 	ENonBlueprintEnum64 LastEnum64Value = ENonBlueprintEnum64::Option3;
-
+	
 	FSimpleTestStruct LastSimpleStructValue;
 	FComplexTestStruct LastComplexStructValue;
 	FNestedContainerStruct LastNestedStructValue;
-
+	
 	TArray<int32> LastIntArrayValue;
 	TArray<FString> LastStringArrayValue;
 	TSet<int32> LastIntSetValue;
 	TMap<FString, int32> LastStringToIntMapValue;
 	TMap<int32, float> LastIntToFloatMapValue;
-
+	
 	TArray<TArray<int32>> LastNestedIntArrayValue;
 	TMap<FString, TArray<float>> LastStringToFloatArrayMapValue;
 	TArray<FSimpleTestStruct> LastStructArrayValue;
@@ -553,10 +546,8 @@ public:
 
 	FString ToString() const
 	{
-		return FString::Printf(TEXT("复杂对象[ID:%d, 名称:%s, 优先级:%d]"),
-		                       ObjectId,
-		                       *ObjectName,
-		                       static_cast<int32>(ObjectPriority));
+		return FString::Printf(TEXT("复杂对象[ID:%d, 名称:%s, 优先级:%d]"), 
+		                       ObjectId, *ObjectName, (int32)ObjectPriority);
 	}
 };
 
@@ -583,13 +574,13 @@ public:
 	static void CleanupTestEnvironment();
 
 	// 验证事件是否被接收
-	static bool VerifyEventReceived(const UGameEventTestReceiver* Receiver, int32 ExpectedCount = 1);
+	static bool VerifyEventReceived(UGameEventTestReceiver* Receiver, int32 ExpectedCount = 1);
 
 	// 等待事件处理完成
 	static void WaitForEventProcessing(float MaxWaitTime = 0.1f);
 
 	// 性能测试辅助函数
-	static double MeasureEventPerformance(const TFunction<void()>& TestFunction, int32 Iterations = 1000);
+	static double MeasureEventPerformance(TFunction<void()> TestFunction, int32 Iterations = 1000);
 
 	// 创建测试数据辅助函数
 	static FSimpleTestStruct CreateTestSimpleStruct(int32 IntValue, const FString& StringValue, bool bBoolValue);
@@ -609,5 +600,5 @@ public:
 	static void RunMultiThreadTest(TFunction<void()> TestFunction, int32 ThreadCount = 4, int32 IterationsPerThread = 25);
 
 	// 压力测试辅助
-	static bool RunStressTest(const TFunction<void()>& TestFunction, int32 TotalIterations = 10000, float MaxTimeSeconds = 10.0f);
-};
+	static bool RunStressTest(TFunction<void()> TestFunction, int32 TotalIterations = 10000, float MaxTimeSeconds = 10.0f);
+}; 

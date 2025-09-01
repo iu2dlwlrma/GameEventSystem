@@ -188,7 +188,7 @@ namespace GameEventTestConstants
 	static const int32 TEST_INT32_MIN = -2147483648;
 	static const int32 TEST_INT32_MAX = 2147483647;
 	static const uint32 TEST_UINT32_MAX = 4294967295U;
-	static const int64 TEST_INT64_MIN = -9223372036854775807LL - 1;
+	static const int64 TEST_INT64_MIN = (-9223372036854775807LL - 1);
 	static const int64 TEST_INT64_MAX = 9223372036854775807LL;
 	static const uint64 TEST_UINT64_MAX = 18446744073709551615ULL;
 	static const float TEST_FLOAT_MIN = -3.4028235e+38f;
@@ -301,7 +301,7 @@ struct FGameEventTestStatistics
 		MaxExecutionTime = 0.0;
 	}
 
-	void AddTestResult(const bool bPassed, const double ExecutionTime)
+	void AddTestResult(bool bPassed, double ExecutionTime)
 	{
 		TotalTests++;
 		if (bPassed)
@@ -329,7 +329,7 @@ struct FGameEventTestStatistics
 
 	float GetSuccessRate() const
 	{
-		return TotalTests > 0 ? static_cast<float>(PassedTests) / static_cast<float>(TotalTests) * 100.0f : 0.0f;
+		return TotalTests > 0 ? (float(PassedTests) / float(TotalTests) * 100.0f) : 0.0f;
 	}
 
 	FString ToString() const
@@ -404,7 +404,7 @@ public:
 	static bool RunConcurrentStressTest(TFunction<void()> TestFunction, int32 ConcurrentThreads, int32 IterationsPerThread);
 
 	// 内存泄漏检测辅助
-	static void CheckMemoryLeaks(const TFunction<void()>& TestFunction);
+	static void CheckMemoryLeaks(TFunction<void()> TestFunction);
 };
 
 // ========================================

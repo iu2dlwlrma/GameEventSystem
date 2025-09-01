@@ -50,42 +50,42 @@ bool FAdvancedGameEventTestHelper::AreNestedArraysEqual(const TArray<TArray<int3
 	return true;
 }
 
-bool FAdvancedGameEventTestHelper::AreFloatsEqual(const float A, const float B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreFloatsEqual(float A, float B, float Tolerance)
 {
 	return FMath::Abs(A - B) <= Tolerance;
 }
 
-bool FAdvancedGameEventTestHelper::AreDoublesEqual(const double A, const double B, const double Tolerance)
+bool FAdvancedGameEventTestHelper::AreDoublesEqual(double A, double B, double Tolerance)
 {
 	return FMath::Abs(A - B) <= Tolerance;
 }
 
-bool FAdvancedGameEventTestHelper::AreVectorsEqual(const FVector& A, const FVector& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreVectorsEqual(const FVector& A, const FVector& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
 
-bool FAdvancedGameEventTestHelper::AreVector2DsEqual(const FVector2D& A, const FVector2D& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreVector2DsEqual(const FVector2D& A, const FVector2D& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
 
-bool FAdvancedGameEventTestHelper::AreVector4sEqual(const FVector4& A, const FVector4& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreVector4sEqual(const FVector4& A, const FVector4& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
 
-bool FAdvancedGameEventTestHelper::AreRotatorsEqual(const FRotator& A, const FRotator& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreRotatorsEqual(const FRotator& A, const FRotator& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
 
-bool FAdvancedGameEventTestHelper::AreQuatsEqual(const FQuat& A, const FQuat& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreQuatsEqual(const FQuat& A, const FQuat& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
 
-bool FAdvancedGameEventTestHelper::AreTransformsEqual(const FTransform& A, const FTransform& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreTransformsEqual(const FTransform& A, const FTransform& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
@@ -95,7 +95,7 @@ bool FAdvancedGameEventTestHelper::AreColorsEqual(const FColor& A, const FColor&
 	return A == B;
 }
 
-bool FAdvancedGameEventTestHelper::AreLinearColorsEqual(const FLinearColor& A, const FLinearColor& B, const float Tolerance)
+bool FAdvancedGameEventTestHelper::AreLinearColorsEqual(const FLinearColor& A, const FLinearColor& B, float Tolerance)
 {
 	return A.Equals(B, Tolerance);
 }
@@ -194,7 +194,7 @@ TArray<double> FAdvancedGameEventTestHelper::GetBoundaryDoubles()
 	};
 }
 
-bool FAdvancedGameEventTestHelper::RunConcurrentStressTest(TFunction<void()> TestFunction, const int32 ConcurrentThreads, int32 IterationsPerThread)
+bool FAdvancedGameEventTestHelper::RunConcurrentStressTest(TFunction<void()> TestFunction, int32 ConcurrentThreads, int32 IterationsPerThread)
 {
 	TArray<TFuture<void>> Futures;
 	const double StartTime = FPlatformTime::Seconds();
@@ -202,7 +202,7 @@ bool FAdvancedGameEventTestHelper::RunConcurrentStressTest(TFunction<void()> Tes
 	for (int32 ThreadIndex = 0; ThreadIndex < ConcurrentThreads; ++ThreadIndex)
 	{
 		TFuture<void> Future = Async(EAsyncExecution::Thread,
-		                             [TestFunction, IterationsPerThread]
+		                             [TestFunction, IterationsPerThread]()
 		                             {
 			                             for (int32 i = 0; i < IterationsPerThread; ++i)
 			                             {
@@ -232,7 +232,7 @@ bool FAdvancedGameEventTestHelper::RunConcurrentStressTest(TFunction<void()> Tes
 	return true;
 }
 
-void FAdvancedGameEventTestHelper::CheckMemoryLeaks(const TFunction<void()>& TestFunction)
+void FAdvancedGameEventTestHelper::CheckMemoryLeaks(TFunction<void()> TestFunction)
 {
 	// 执行测试前的内存状态
 	const SIZE_T MemoryBefore = FPlatformMemory::GetStats().UsedPhysical;
@@ -785,7 +785,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventStringTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::TEXT_EVENT), TestReceiver, TEXT("OnTextEvent"));
 
-		TArray TextTestValues = {
+		TArray<FText> TextTestValues = {
 			FText::GetEmpty(),
 			FText::FromString(TEXT("简单FText测试")),
 			FText::FromString(TEXT("FText with English")),
@@ -859,7 +859,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventMathTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::VECTOR_EVENT), TestReceiver, TEXT("OnVectorEvent"));
 
-		TArray VectorTestValues = {
+		TArray<FVector> VectorTestValues = {
 			FVector::ZeroVector,
 			FVector::OneVector,
 			FVector::UpVector,
@@ -902,7 +902,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventMathTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::VECTOR2D_EVENT), TestReceiver, TEXT("OnVector2DEvent"));
 
-		TArray Vector2DTestValues = {
+		TArray<FVector2D> Vector2DTestValues = {
 			FVector2D::ZeroVector,
 			FVector2D::UnitVector,
 			FVector2D(-1.0f, -1.0f),
@@ -974,7 +974,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventContainerTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::INT_ARRAY_EVENT), TestReceiver, TEXT("OnIntArrayEvent"));
 
-		TArray ArrayTestValues = {
+		TArray<TArray<int32>> ArrayTestValues = {
 			{},  // 空数组
 			{ 42 },  // 单元素数组
 			{ 1, 2, 3, 4, 5 },  // 小数组
@@ -1011,7 +1011,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventContainerTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::STRING_ARRAY_EVENT), TestReceiver, TEXT("OnStringArrayEvent"));
 
-		TArray StringArrayTestValues = {
+		TArray<TArray<FString>> StringArrayTestValues = {
 			{},  // 空数组
 			{ TEXT("单个字符串") },
 			{ TEXT("第一个"), TEXT("第二个"), TEXT("第三个") },
@@ -1048,7 +1048,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventContainerTypesTest)
 
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::STRING_TO_INT_MAP_EVENT), TestReceiver, TEXT("OnStringToIntMapEvent"));
 
-		TArray MapTestValues = {
+		TArray<TMap<FString, int32>> MapTestValues = {
 			{},  // 空映射
 			{ { TEXT("键1"), 42 } },  // 单元素映射
 			{ { TEXT("分数"), 95 }, { TEXT("等级"), 10 }, { TEXT("生命值"), 100 } },
@@ -1115,14 +1115,14 @@ BEGIN_GAME_EVENT_TEST(FGameEventLambdaTest)
 	{
 		GAME_EVENT_LOG_INFO("测试单参数Lambda函数...");
 
-		std::atomic LambdaCallCount { 0 };
+		std::atomic<int32> LambdaCallCount { 0 };
 		int32 LastReceivedValue = 0;
 
 		// 添加Lambda监听器
 		FString ListenerId = EventManager->AddLambdaListener(
 		                                                     FEventId(GameEventTestEvents::LAMBDA_INT_EVENT),
 		                                                     TestReceiver,
-		                                                     [&LambdaCallCount, &LastReceivedValue](const int32 Value)
+		                                                     [&LambdaCallCount, &LastReceivedValue](int32 Value)
 		                                                     {
 			                                                     LambdaCallCount.fetch_add(1);
 			                                                     LastReceivedValue = Value;
@@ -1133,7 +1133,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventLambdaTest)
 		GAME_EVENT_TEST_TEXT(!ListenerId.IsEmpty(), "Lambda监听器ID不应该为空");
 
 		// 发送事件测试
-		TArray TestValues = { -100, 0, 42, 1000 };
+		TArray<int32> TestValues = { -100, 0, 42, 1000 };
 
 		for (int32 TestValue : TestValues)
 		{
@@ -1163,7 +1163,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventLambdaTest)
 	{
 		GAME_EVENT_LOG_INFO("测试多参数Lambda函数...");
 
-		std::atomic MultiLambdaCallCount { 0 };
+		std::atomic<int32> MultiLambdaCallCount { 0 };
 		int32 LastInt = 0;
 		FString LastString;
 		bool LastBool = false;
@@ -1172,11 +1172,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventLambdaTest)
 		FString ListenerId = EventManager->AddLambdaListener(
 		                                                     FEventId(GameEventTestEvents::LAMBDA_MULTI_PARAM_EVENT),
 		                                                     TestReceiver,
-		                                                     [&MultiLambdaCallCount, &LastInt, &LastString, &LastBool](const int32 IntValue,
-		                                                                                                               const FString& StringValue,
-		                                                                                                               const bool bBoolValue,
-		                                                                                                               const ENonBlueprintEnum64 NonBlueprintEnum64,
-		                                                                                                               const EGameEventState GameEventState)
+		                                                     [&MultiLambdaCallCount, &LastInt, &LastString, &LastBool](int32 IntValue, const FString& StringValue, bool bBoolValue, ENonBlueprintEnum64 NonBlueprintEnum64, EGameEventState GameEventState)
 		                                                     {
 			                                                     MultiLambdaCallCount.fetch_add(1);
 			                                                     LastInt = IntValue;
@@ -1268,7 +1264,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventMultiThreadTest)
 		GAME_EVENT_LOG_INFO("启动 %d 个线程，每个线程发送 %d 个事件", ThreadCount, EventsPerThread);
 
 		// 启动多个并发线程发送事件
-		FGameEventTestHelper::RunMultiThreadTest([&]
+		FGameEventTestHelper::RunMultiThreadTest([&]()
 		                                         {
 			                                         for (int32 i = 0; i < EventsPerThread; ++i)
 			                                         {
@@ -1287,7 +1283,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventMultiThreadTest)
 		GAME_EVENT_LOG_INFO("原子计数器接收到的事件数: %d (期望: %d)", AtomicCount, TotalExpectedEvents);
 
 		// 由于多线程的不确定性，我们允许一定的容差
-		bool bCountInRange = AtomicCount >= TotalExpectedEvents * 0.9f && AtomicCount <= TotalExpectedEvents * 1.1f;
+		bool bCountInRange = (AtomicCount >= TotalExpectedEvents * 0.9f) && (AtomicCount <= TotalExpectedEvents * 1.1f);
 		GAME_EVENT_TEST_STR(bCountInRange,
 		                    FString::Printf(TEXT("多线程事件接收数量应该在合理范围内(实际:%d, 期望:%d)"), AtomicCount, TotalExpectedEvents));
 
@@ -1302,10 +1298,10 @@ BEGIN_GAME_EVENT_TEST(FGameEventMultiThreadTest)
 		GAME_EVENT_LOG_INFO("测试并发监听器添加和移除...");
 
 		const FString TestEvent = TEXT("Test.ConcurrentListener");
-		std::atomic ListenerCount { 0 };
+		std::atomic<int32> ListenerCount { 0 };
 
 		// 并发添加和移除监听器
-		FAdvancedGameEventTestHelper::RunConcurrentStressTest([&]
+		FAdvancedGameEventTestHelper::RunConcurrentStressTest([&]()
 		                                                      {
 			                                                      // 添加Lambda监听器
 			                                                      FString ListenerId = EventManager->AddLambdaListener(
@@ -1385,7 +1381,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventStressTest)
 		GAME_EVENT_LOG_INFO("开始发送 %d 个事件的压力测试...", StressTestIterations);
 
 		// 执行压力测试
-		bool bStressTestPassed = FGameEventTestHelper::RunStressTest([&]
+		bool bStressTestPassed = FGameEventTestHelper::RunStressTest([&]()
 		                                                             {
 			                                                             int32 TestValue = FMath::RandRange(1, 1000);
 			                                                             EventManager->SendEvent(FEventId(GameEventTestEvents::STRESS_TEST_EVENT), WorldContext, false, TestValue);
@@ -1400,7 +1396,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventStressTest)
 
 		// 验证接收到的事件数量（允许一定的容差，因为压力测试可能会丢失一些事件）
 		int32 ReceivedCount = TestReceiver->AtomicEventCount.load();
-		float SuccessRate = static_cast<float>(ReceivedCount) / static_cast<float>(StressTestIterations) * 100.0f;
+		float SuccessRate = float(ReceivedCount) / float(StressTestIterations) * 100.0f;
 
 		GAME_EVENT_LOG_INFO("压力测试统计: 发送=%d, 接收=%d, 成功率=%.2f%%",
 		                    StressTestIterations,
@@ -1428,7 +1424,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventStressTest)
 		// 单事件性能测试
 		const int32 PerfIterations = GameEventTestConstants::DEFAULT_PERFORMANCE_ITERATIONS;
 
-		double AvgTime = FGameEventTestHelper::MeasureEventPerformance([&]
+		double AvgTime = FGameEventTestHelper::MeasureEventPerformance([&]()
 		                                                               {
 			                                                               EventManager->SendEvent(FEventId(TEXT("Test.Performance")), WorldContext, false, 42);
 		                                                               },
@@ -1452,7 +1448,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventStressTest)
 		GAME_EVENT_LOG_INFO("测试内存泄漏检测...");
 
 		// 执行大量事件操作并检测内存泄漏
-		FAdvancedGameEventTestHelper::CheckMemoryLeaks([&]
+		FAdvancedGameEventTestHelper::CheckMemoryLeaks([&]()
 		{
 			// 创建大量监听器
 			TArray<FString> ListenerIds;
@@ -1532,7 +1528,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventBoundaryTest)
 		// 测试极大和极小的浮点数
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::FLOAT_EVENT), TestReceiver, TEXT("OnFloatEvent"));
 
-		TArray ExtremeFloats = {
+		TArray<float> ExtremeFloats = {
 			0.0f,
 			FLT_MIN,
 			-FLT_MIN,
@@ -1819,7 +1815,7 @@ BEGIN_GAME_EVENT_TEST(FGameEventIntegrationTest)
 		EventManager->AddListenerFunction(FEventId(GameEventTestEvents::INT32_EVENT), TestReceiver2, TEXT("OnInt32Event"));
 
 		// 添加Lambda监听器
-		std::atomic LambdaCount { 0 };
+		std::atomic<int32> LambdaCount { 0 };
 		FString LambdaId = EventManager->AddLambdaListener(
 		                                                   FEventId(GameEventTestEvents::STRING_EVENT),
 		                                                   TestReceiver2,
