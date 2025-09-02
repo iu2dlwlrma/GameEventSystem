@@ -8,7 +8,6 @@
 #include "GameEventNodeTypes.h"
 #include "K2Node_CallFunction.h"
 #include "KismetCompiler.h"
-#include "GameEventNodeLog.h"
 
 #define LOCTEXT_NAMESPACE "UK2Node_GameEventBase"
 

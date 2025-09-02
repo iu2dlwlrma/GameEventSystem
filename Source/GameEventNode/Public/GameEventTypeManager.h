@@ -25,7 +25,7 @@ public:
 	bool AnalyzeAndRegisterFunctionType(const FString& EventName, const UClass* Receiver, const FString& FunctionName);
 
 	bool BindEventTypeNotify(const FString& EventName, const int32 UniqueID, const TFunction<void()>& Function);
-	bool UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID);
+	void UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID);
 	void StartEventTypeNotify(const FString& EventName);
 
 protected:

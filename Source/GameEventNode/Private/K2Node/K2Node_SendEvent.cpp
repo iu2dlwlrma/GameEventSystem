@@ -78,7 +78,6 @@ void UK2Node_SendEvent::PostReconstructNode()
 				                                                                   RefreshPinTypes();
 			                                                                   }
 		                                                                   });
-		UE_LOG_GAS_EDITOR(TEXT("Bind Event Type Change Notify %s! Node '%d' for event '%s' (%s)"), bIsBindSuccess ? TEXT("Success") : TEXT("Failure"), GetUniqueID(), *EventName, *GetFullName());
 	}
 
 	const FString PrefixStr = FK2Node_SendEventPinName::ParamDataName.ToString();
@@ -242,12 +241,37 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 	const bool bHasParam = ParamCount > 0;
 	if (bHasParam)
 	{
-		CallFuncName = FName(*FString::Format(TEXT("SendEventParam{0}"), {ParamCount}));
-		if (UGameEventNodeUtils::StaticClass()->FindFunctionByName(CallFuncName) == nullptr)
+		if (ParamCount == 1)
 		{
-			const FText MessageLog = FText::Format(NSLOCTEXT("GameEventNode", "CallFuncValid", "Function Name '{0}' Invalid! @@"), FText::FromString(CallFuncName.ToString()));
-			CompilerContext.MessageLog.Error(*MessageLog.ToString(), this);
-			return;
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEvent);
+		}
+		else if (ParamCount == 2)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventTwoParam);
+		}
+		else if (ParamCount == 3)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventThreeParam);
+		}
+		else if (ParamCount == 4)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventFourParam);
+		}
+		else if (ParamCount == 5)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventFiveParam);
+		}
+		else if (ParamCount == 6)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventSixParam);
+		}
+		else if (ParamCount == 7)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventSevenParam);
+		}
+		else if (ParamCount == 8)
+		{
+			CallFuncName = GET_FUNCTION_NAME_CHECKED(UGameEventNodeUtils, SendEventEightParam);
 		}
 	}
 	else
@@ -279,7 +303,7 @@ void UK2Node_SendEvent::ExpandNode(FKismetCompilerContext& CompilerContext, UEdG
 					UEdGraphPin* ParamDataParam = CallFuncNode->FindPinChecked(ParamDataParamName);
 					ParamDataParam->PinType = ParamDataPin->PinType;
 
-					//UE_LOG_GAS_EDITOR(TEXT("PinCategory '%s'  -- PinSubCategoryObject '%s'"), *ParamDataPin->PinType.PinCategory.ToString(), *GetNameSafe(ParamDataPin->PinType.PinSubCategoryObject.Get()));
+					UE_LOG_GAS_EDITOR(TEXT("PinCategory '%s'  -- PinSubCategoryObject '%s'"), *ParamDataPin->PinType.PinCategory.ToString(), *GetNameSafe(ParamDataPin->PinType.PinSubCategoryObject.Get()));
 
 					// Handle connected pins, unconnected pins need to be linked, otherwise reflection won't get them and cause crashes
 					if (ParamDataPin->LinkedTo.Num() == 0)
@@ -340,8 +364,7 @@ void UK2Node_SendEvent::DestroyNode()
 	const FString EventName = GetCurrentEventName();
 	if (!EventName.IsEmpty() && bIsBindSuccess)
 	{
-		bIsBindSuccess = FGameEventTypeManager::Get()->UnBindEventTypeNotify(EventName, GetUniqueID());
-		UE_LOG_GAS_EDITOR(TEXT("UnBind Event Type Change Notify %s! Node '%d' for event '%s' (%s)"), bIsBindSuccess ? TEXT("Success") : TEXT("Failure"), GetUniqueID(), *EventName, *GetFullName());
+		FGameEventTypeManager::Get()->UnBindEventTypeNotify(EventName, GetUniqueID());
 	}
 }
 

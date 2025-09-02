@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameEventTypes.h"
+#include "Logger.h"
 #include "GameEventNodeTypes.generated.h"
 
 static inline struct FGlobalConfig

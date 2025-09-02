@@ -6,7 +6,7 @@
 #include "Engine/World.h"
 #include "EdGraph/EdGraphPin.h"
 #include "EdGraphSchema_K2.h"
-#include "GameEventNodeLog.h"
+#include "Logger.h"
 
 TSharedPtr<FGameEventTypeManager> FGameEventTypeManager::TypeManagerPtr = nullptr;
 
@@ -24,7 +24,7 @@ FGameEventTypeManager* FGameEventTypeManager::Get()
 	if (!TypeManagerPtr.IsValid())
 	{
 		TypeManagerPtr = MakeShared<FGameEventTypeManager>();
-		UE_LOG_GAS_INFO(TEXT("GameEventTypeManager instance created successfully, hash: 0x%08X"), GetTypeHash(TypeManagerPtr));
+		GES_LOG_DISPLAY(TEXT("GameEventTypeManager instance created successfully, hash: 0x%08X"), GetTypeHash(TypeManagerPtr));
 	}
 	return TypeManagerPtr.Get();
 }
@@ -272,7 +272,7 @@ bool FGameEventTypeManager::AnalyzeAndRegisterFunctionType(const FString& EventN
 	if (TypeManager->AnalyzeFunctionSignature(Receiver, FunctionName, TypeInfo))
 	{
 		TypeManager->RegisterEventType(EventName, TypeInfo);
-		UE_LOG_GAS_INFO(TEXT("Event[%s] - Auto-registered function type [%s::%s] -> [%s]"),
+		GES_LOG_DISPLAY(TEXT("Event[%s] - Auto-registered function type [%s::%s] -> [%s]"),
 		                *EventName,
 		                *Receiver->GetName(),
 		                *FunctionName,
@@ -280,7 +280,7 @@ bool FGameEventTypeManager::AnalyzeAndRegisterFunctionType(const FString& EventN
 		return true;
 	}
 
-	UE_LOG_GAS_WARNING(TEXT("Event[%s] - Cannot analyze function signature [%s::%s]"),
+	GES_LOG_WARNING(TEXT("Event[%s] - Cannot analyze function signature [%s::%s]"),
 	                *EventName,
 	                *Receiver->GetName(),
 	                *FunctionName);
@@ -302,19 +302,17 @@ bool FGameEventTypeManager::BindEventTypeNotify(const FString& EventName, const 
 	return true;
 }
 
-bool FGameEventTypeManager::UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID)
+void FGameEventTypeManager::UnBindEventTypeNotify(const FString& EventName, const int32 UniqueID)
 {
 	if (EventName.IsEmpty())
 	{
-		return false;
+		return;
 	}
 	TMap<int32, TFunction<void()>>* NotifyGroup = EventTypeNotifyGroup.Find(EventName);
 	if (NotifyGroup->Contains(UniqueID))
 	{
 		NotifyGroup->Remove(UniqueID);
-		return true;
 	}
-	return false;
 }
 
 void FGameEventTypeManager::StartEventTypeNotify(const FString& EventName)

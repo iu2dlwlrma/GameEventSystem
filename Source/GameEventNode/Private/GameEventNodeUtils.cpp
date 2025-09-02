@@ -257,12 +257,12 @@ void UGameEventNodeUtils::RemoveListener(UObject* WorldContextObject, const FStr
 	}
 }
 
-void UGameEventNodeUtils::SendEventParam1(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData)
+void UGameEventNodeUtils::SendEvent(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData)
 {
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam1)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEvent)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -279,12 +279,12 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam1)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam2(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1)
+void UGameEventNodeUtils::SendEventTwoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1)
 {
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam2)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventTwoParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -301,12 +301,12 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam2)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam3(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2)
+void UGameEventNodeUtils::SendEventThreeParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2)
 {
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam3)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventThreeParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -323,12 +323,12 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam3)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam4(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3)
+void UGameEventNodeUtils::SendEventFourParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3)
 {
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam4)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFourParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -345,12 +345,12 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam4)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam5(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4)
+void UGameEventNodeUtils::SendEventFiveParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4)
 {
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam5)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventFiveParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -367,7 +367,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam5)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam6(UObject* WorldContextObject,
+void UGameEventNodeUtils::SendEventSixParam(UObject* WorldContextObject,
                                             const FString EventName,
                                             const bool bPinned,
                                             const int32& ParamData,
@@ -380,7 +380,7 @@ void UGameEventNodeUtils::SendEventParam6(UObject* WorldContextObject,
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam6)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSixParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -397,7 +397,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam6)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam7(UObject* WorldContextObject,
+void UGameEventNodeUtils::SendEventSevenParam(UObject* WorldContextObject,
                                               const FString EventName,
                                               const bool bPinned,
                                               const int32& ParamData,
@@ -411,7 +411,7 @@ void UGameEventNodeUtils::SendEventParam7(UObject* WorldContextObject,
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam7)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventSevenParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;
@@ -428,7 +428,7 @@ DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam7)
 	P_NATIVE_END;
 }
 
-void UGameEventNodeUtils::SendEventParam8(UObject* WorldContextObject,
+void UGameEventNodeUtils::SendEventEightParam(UObject* WorldContextObject,
                                               const FString EventName,
                                               const bool bPinned,
                                               const int32& ParamData,
@@ -443,7 +443,7 @@ void UGameEventNodeUtils::SendEventParam8(UObject* WorldContextObject,
 	checkNoEntry();
 }
 
-DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventParam8)
+DEFINE_FUNCTION(UGameEventNodeUtils::execSendEventEightParam)
 {
 	Stack.MostRecentProperty = nullptr;
 	FEventContext EventContext;

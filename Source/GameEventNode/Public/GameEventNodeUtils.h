@@ -31,37 +31,37 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="RemoveListener (BPF)", meta = ( WorldContext = "WorldContextObject"))
 	static void RemoveListener(UObject* WorldContextObject, const FString EventName);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam1", meta = (CustomStructureParam = "ParamData", WorldContext = "WorldContextObject"))
-	static void SendEventParam1(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData);
-	DECLARE_FUNCTION(execSendEventParam1);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEvent", meta = (CustomStructureParam = "ParamData", WorldContext = "WorldContextObject"))
+	static void SendEvent(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData);
+	DECLARE_FUNCTION(execSendEvent);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam2", meta = (CustomStructureParam = "ParamData,ParamData1", WorldContext = "WorldContextObject"))
-	static void SendEventParam2(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1);
-	DECLARE_FUNCTION(execSendEventParam2);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventTwoParam", meta = (CustomStructureParam = "ParamData,ParamData1", WorldContext = "WorldContextObject"))
+	static void SendEventTwoParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1);
+	DECLARE_FUNCTION(execSendEventTwoParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam3", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2", WorldContext = "WorldContextObject"))
-	static void SendEventParam3(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2);
-	DECLARE_FUNCTION(execSendEventParam3);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventThreeParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2", WorldContext = "WorldContextObject"))
+	static void SendEventThreeParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2);
+	DECLARE_FUNCTION(execSendEventThreeParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam4", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3", WorldContext = "WorldContextObject"))
-	static void SendEventParam4(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3);
-	DECLARE_FUNCTION(execSendEventParam4);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventFourParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3", WorldContext = "WorldContextObject"))
+	static void SendEventFourParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3);
+	DECLARE_FUNCTION(execSendEventFourParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam5", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4", WorldContext = "WorldContextObject"))
-	static void SendEventParam5(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4);
-	DECLARE_FUNCTION(execSendEventParam5);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventFiveParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4", WorldContext = "WorldContextObject"))
+	static void SendEventFiveParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4);
+	DECLARE_FUNCTION(execSendEventFiveParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam6", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5", WorldContext = "WorldContextObject"))
-	static void SendEventParam6(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5);
-	DECLARE_FUNCTION(execSendEventParam6);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventSixParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5", WorldContext = "WorldContextObject"))
+	static void SendEventSixParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5);
+	DECLARE_FUNCTION(execSendEventSixParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam7", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5,ParamData6", WorldContext = "WorldContextObject"))
-	static void SendEventParam7(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5, const int32& ParamData6);
-	DECLARE_FUNCTION(execSendEventParam7);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventSevenParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5,ParamData6", WorldContext = "WorldContextObject"))
+	static void SendEventSevenParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5, const int32& ParamData6);
+	DECLARE_FUNCTION(execSendEventSevenParam);
 
-	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventParam8", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5,ParamData6,ParamData7", WorldContext = "WorldContextObject"))
-	static void SendEventParam8(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5, const int32& ParamData6, const int32& ParamData7);
-	DECLARE_FUNCTION(execSendEventParam8);
+	UFUNCTION(BlueprintCallable, CustomThunk, BlueprintInternalUseOnly, Category = "GameEventSystem", DisplayName="SendEventEightParam", meta = (CustomStructureParam = "ParamData,ParamData1,ParamData2,ParamData3,ParamData4,ParamData5,ParamData6,ParamData7", WorldContext = "WorldContextObject"))
+	static void SendEventEightParam(UObject* WorldContextObject, const FString EventName, const bool bPinned, const int32& ParamData, const int32& ParamData1, const int32& ParamData2, const int32& ParamData3, const int32& ParamData4, const int32& ParamData5, const int32& ParamData6, const int32& ParamData7);
+	DECLARE_FUNCTION(execSendEventEightParam);
 
 	static void ProcessEventParameters(FFrame& Stack, FEventContext& EventContext, int32 NumParams);
 	
