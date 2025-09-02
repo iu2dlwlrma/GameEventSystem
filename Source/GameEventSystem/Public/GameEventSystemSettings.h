@@ -13,7 +13,6 @@ public:
 	UGameEventSystemSettings();
 
 	//~ Begin UDeveloperSettings Interface
-	virtual FName GetCategoryName() const override;
 	virtual FText GetSectionText() const override;
 	virtual FText GetSectionDescription() const override;
 #if WITH_EDITOR

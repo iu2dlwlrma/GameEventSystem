@@ -6,11 +6,6 @@ UGameEventSystemSettings::UGameEventSystemSettings() : bEnableDebug(true),
 {
 }
 
-FName UGameEventSystemSettings::GetCategoryName() const
-{
-	return TEXT("Plugins");
-}
-
 FText UGameEventSystemSettings::GetSectionText() const
 {
 	return NSLOCTEXT("GameEventSystemSettings", "SectionText", "Game Event System");
